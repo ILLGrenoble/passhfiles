@@ -1,4 +1,4 @@
-graft src/bastion-browser
+graft src/bastion_browser
 
 include README.md
 include CHANGELOG.md
