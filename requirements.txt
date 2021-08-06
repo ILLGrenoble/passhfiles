@@ -1,4 +1,5 @@
 PyQt5
 paramiko
+pyyaml
 scp
 

@@ -7,7 +7,7 @@ import subprocess
 import scp
 
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
-from bastion_browser.utils.Misc import sizeOf
+from bastion_browser.utils.Numbers import sizeOf
 
 class LocalFileSystemModel(IFileSystemModel):
 
@@ -81,6 +81,6 @@ class LocalFileSystemModel(IFileSystemModel):
 
         for (d,_) in data:
             cmd = scp.SCPClient(self._sshSession.get_transport())
-            cmd.get('server/{}'.format(d),self._currentDirectory, recursive=True)
+            cmd.get('{}/{}'.format(self._server, d),self._currentDirectory, recursive=True)
 
         self.setDirectory(self._currentDirectory)

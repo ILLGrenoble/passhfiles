@@ -6,7 +6,7 @@ import tempfile
 import scp
 
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
-from bastion_browser.utils.Misc import sizeOf
+from bastion_browser.utils.Numbers import sizeOf
 
 class RemoteFileSystemModel(IFileSystemModel):
             
@@ -21,7 +21,7 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         for row in selectedRow[::-1]:
             selectedPath = os.path.join(self._currentDirectory,self._entries[row][0])
-            _, _, stderr = self._sshSession.exec_command('server rm -rf {}'.format(selectedPath))
+            _, _, stderr = self._sshSession.exec_command('{} rm -rf {}'.format(self._server, selectedPath))
             error = stderr.read().decode()
             if error:
                 logging.error(error)
@@ -45,7 +45,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         oldName = os.path.join(self._currentDirectory,oldName)
         newName = os.path.join(self._currentDirectory,newName)
         
-        _, _, stderr = self._sshSession.exec_command('server mv {} {}'.format(oldName,newName))
+        _, _, stderr = self._sshSession.exec_command('{} mv {} {}'.format(self._server, oldName,newName))
         error = stderr.read().decode()
         if error:
             logging.error(error)
@@ -57,7 +57,7 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         self._currentDirectory = directory
 
-        _, stdout, stderr = self._sshSession.exec_command('server ls --group-directories --full-time -alpL {}'.format(self._currentDirectory))
+        _, stdout, stderr = self._sshSession.exec_command('{} ls --group-directories --full-time -alpL {}'.format(self._server,self._currentDirectory))
         error = stderr.read().decode()
         if error:
             logging.error(error)

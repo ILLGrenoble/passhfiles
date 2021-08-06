@@ -12,7 +12,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
     sections = ['Name','Size','Type','Date Modified']
 
-    def __init__(self, sshSession, startingDirectory, *args, **kwargs):
+    def __init__(self, sshSession, server, startingDirectory, *args, **kwargs):
 
         super(IFileSystemModel,self).__init__(*args, **kwargs)
 
@@ -22,6 +22,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         self._entries = []
 
         self._sshSession = sshSession
+
+        self._server = server
 
         self.setDirectory(startingDirectory)
 
