@@ -65,7 +65,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
     def flags(self, index):
 
-            return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
+        return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
 
     def getEntries(self,indexes):
 

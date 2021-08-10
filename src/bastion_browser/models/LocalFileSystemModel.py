@@ -6,6 +6,7 @@ import subprocess
 
 import scp
 
+from bastion_browser.kernel.Preferences import PREFERENCES
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
 
@@ -13,7 +14,14 @@ class LocalFileSystemModel(IFileSystemModel):
 
     def editFile(self, path):
 
-        subprocess.call(['gedit',path])
+        if not PREFERENCES['editor']:
+            logging.error('No text editor set in the preferences')
+            return
+
+        try:
+            subprocess.call([PREFERENCES['editor'],path])
+        except Exception as e:
+            logging.error(str(e))
 
     def favorites(self):
 

@@ -5,6 +5,7 @@ import tempfile
 
 import scp
 
+from bastion_browser.kernel.Preferences import PREFERENCES
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
 
@@ -12,10 +13,17 @@ class RemoteFileSystemModel(IFileSystemModel):
             
     def editFile(self, path):
 
+        if not PREFERENCES['editor']:
+            logging.error('No text editor set in the preferences')
+            return
+
         tempFile = tempfile.mktemp()
         cmd = scp.SCPClient(self._sshSession.get_transport())
         cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),path),tempFile, recursive=True)
-        subprocess.call(['vi',tempFile])
+        try:
+            subprocess.call([PREFERENCES['editor'],tempFile])
+        except Exception as e:
+            logging.error(str(e))
 
     def favorites(self):
 

@@ -18,6 +18,14 @@ def applicationDirectory():
     
     return basedir
 
+def applicationKeyPath():
+
+    return os.path.join(applicationDirectory(),'application_key.yml')
+
+def preferencesPath():
+
+    return os.path.join(applicationDirectory(),'preferences.yml')
+
 def sessionsDatabasePath():
 
     return os.path.join(applicationDirectory(),'sessions.yml')

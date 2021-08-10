@@ -9,9 +9,11 @@ import yaml
 
 from PyQt5 import QtCore, QtWidgets
 
+from bastion_browser.dialogs.PreferencesDialog import PreferencesDialog
+from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
 from bastion_browser.models.RemoteFileSystemModel import RemoteFileSystemModel
-from bastion_browser.utils.Platform import sessionsDatabasePath
+from bastion_browser.utils.Platform import preferencesPath, sessionsDatabasePath
 from bastion_browser.views.FileSystemTableView import FileSystemTableView
 from bastion_browser.views.SessionTreeView import SessionTreeView
 from bastion_browser.widgets.LoggerWidget import LoggerWidget
@@ -25,6 +27,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._init_ui()
 
         self.loadSessions()
+
+        self.loadPreferences()
 
     def _build_menu(self):
         """Build the menu.
@@ -53,6 +57,13 @@ class MainWindow(QtWidgets.QMainWindow):
         restoreSessionsAction.setStatusTip('Clear all sessions')
         restoreSessionsAction.triggered.connect(self.onLoadSessions)
         fileMenu.addAction(restoreSessionsAction)
+
+        fileMenu.addSeparator()
+
+        preferencesAction = QtWidgets.QAction('&Preferences', self)
+        preferencesAction.setStatusTip('Open preferences settings')
+        preferencesAction.triggered.connect(self.onSetPreferences)
+        fileMenu.addAction(preferencesAction)
 
         fileMenu.addSeparator()
 
@@ -103,6 +114,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         logging.getLogger().setLevel(logging.INFO)
 
+    def loadPreferences(self):
+
+        if not os.path.exists(preferencesPath()):
+            return
+
+        loadPreferences(preferencesPath())
+
+        if PREFERENCES['auto-connect']:
+            sessionsModel = self._sessionListView.model()
+            sessionIndexes = [sessionsModel.index(i,0) for i in range(sessionsModel.rowCount())]
+            for index in sessionIndexes:
+                sessionsModel.connect(index)
+
     def loadSessions(self):
 
         sessionsPath = sessionsDatabasePath()
@@ -151,6 +175,11 @@ class MainWindow(QtWidgets.QMainWindow):
         sessionsModel = self._sessionListView.model()
 
         sessionsModel.saveSessions(sessionsDatabasePath())
+
+    def onSetPreferences(self):
+
+        dialog = PreferencesDialog(self)
+        dialog.exec_()
 
     @property
     def sessionListView(self):

@@ -9,6 +9,7 @@ import yaml
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from bastion_browser import REFKEY
 from bastion_browser.utils.Platform import baseDirectory
 
 class RootNode(object):
@@ -247,21 +248,17 @@ class SessionModel(QtCore.QAbstractItemModel):
             logging.error('Unknown key type')
             return
 
+        password = REFKEY.decrypt(data['password']).decode() if data['password'] is not None else None
+
         try:
             f = open(data['key'],'r')
             s = f.read()
             f.close()
             keyfile = io.StringIO(s)
-            key = paramikoKeyModule.from_private_key(keyfile)
-        except paramiko.ssh_exception.PasswordRequiredException:
-            text, ok = QtWidgets.QInputDialog.getText(None, "Password", "Enter password", QtWidgets.QLineEdit.Password)
-            if ok and text:
-                keyfile.seek(0)
-                try:
-                    key = paramikoKeyModule.from_private_key(keyfile,password=text)
-                except paramiko.ssh_exception.SSHException:
-                    logging.error('Invalid password for {} key'.format(data['keytype']))
-                    return
+            key = paramikoKeyModule.from_private_key(keyfile,password=password)
+        except Exception as e:
+            logging.error(str(e))
+            return
 
         sshSession = paramiko.SSHClient()
         sshSession.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -306,7 +303,16 @@ class SessionModel(QtCore.QAbstractItemModel):
                 return None
         elif role == QtCore.Qt.ToolTipRole:
             if isinstance(node,SessionNode):
-                return '\n'.join(['{}: {}'.format(k,v) for k,v in node.data(0).items()])
+                data = node.data(0)
+                tooltip = []
+                for k,v in data.items():
+                    if k == 'password':
+                        continue
+                    if k == 'servers':
+                        tooltip.append(('servers',list(v.keys())))
+                    else:
+                        tooltip.append((k,v))
+                return '\n'.join(['{}: {}'.format(k,v) for k,v in tooltip])
             else:
                 return None
         elif role == SessionModel.SessionData:

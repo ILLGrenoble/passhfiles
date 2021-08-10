@@ -3,6 +3,7 @@ import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from bastion_browser import REFKEY
 from bastion_browser.utils.Gui import mainWindow
 
 class SessionDialog(QtWidgets.QDialog):
@@ -12,7 +13,8 @@ class SessionDialog(QtWidgets.QDialog):
                    'user':'passhport',
                    'port':22,
                    'key':'',
-                   'keytype': 'ECDSA'}
+                   'keytype': 'ECDSA',
+                   'password':''}
 
     def __init__(self, parent, newSession, data=None):
 
@@ -66,6 +68,13 @@ class SessionDialog(QtWidgets.QDialog):
         keyTypeLayout.addWidget(r1)
         keyTypeLayout.addWidget(r2)
 
+        self._password = QtWidgets.QLineEdit()
+        self._password.setEchoMode(QtWidgets.QLineEdit.Password)
+        print(self._data)
+        password = REFKEY.decrypt(self._data['password']).decode() if self._data['password'] else ''
+        self._password.setText(password)
+
+
         self._button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self._button_box.accepted.connect(self.accept)
         self._button_box.rejected.connect(self.reject)
@@ -80,12 +89,13 @@ class SessionDialog(QtWidgets.QDialog):
         form_layout.addRow(QtWidgets.QLabel('Port'),self._port)
         form_layout.addRow(QtWidgets.QLabel('Private key'),keyHLayout)
         form_layout.addRow(QtWidgets.QLabel('Key type'),keyTypeLayout)
+        form_layout.addRow(QtWidgets.QLabel('Password'),self._password)
 
         main_layout.addLayout(form_layout)
 
         main_layout.addWidget(self._button_box)
 
-        self.setGeometry(0, 0, 600, 400)
+        self.setGeometry(0, 0, 600, 250)
 
         self.setLayout(main_layout)
 
@@ -146,16 +156,21 @@ class SessionDialog(QtWidgets.QDialog):
         if not key:
             return False, 'No key provided'
         if not os.path.exists(key):
-            return False, 'The pass to private key does not exist'
+            return False, 'The path to private key does not exist'
 
         keyType = [b.text() for b in self._radioButtonGroup.buttons() if b.isChecked()][0]
+
+        password = self._password.text().strip() if self._password.text().strip() else None
+        if password is not None:
+            password = REFKEY.encrypt(bytes(password,'utf-8'))
 
         self._data = collections.OrderedDict((('name',name),
                                               ('address',address),
                                               ('user',user),
                                               ('port',port),
                                               ('key',key),
-                                              ('keytype',keyType)))
+                                              ('keytype',keyType),
+                                              ('password',password)))
 
         return True, None
 
