@@ -12,8 +12,7 @@ class SessionDialog(QtWidgets.QDialog):
                    'user':'passhport',
                    'port':22,
                    'key':'',
-                   'keytype': 'ECDSA',
-                   'servers': []}
+                   'keytype': 'ECDSA'}
 
     def __init__(self, parent, newSession, data=None):
 
@@ -67,9 +66,6 @@ class SessionDialog(QtWidgets.QDialog):
         keyTypeLayout.addWidget(r1)
         keyTypeLayout.addWidget(r2)
 
-        self._servers = QtWidgets.QComboBox()
-        self._servers.addItems(self._data['servers'])
-
         self._button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self._button_box.accepted.connect(self.accept)
         self._button_box.rejected.connect(self.reject)
@@ -84,7 +80,6 @@ class SessionDialog(QtWidgets.QDialog):
         form_layout.addRow(QtWidgets.QLabel('Port'),self._port)
         form_layout.addRow(QtWidgets.QLabel('Private key'),keyHLayout)
         form_layout.addRow(QtWidgets.QLabel('Key type'),keyTypeLayout)
-        form_layout.addRow(QtWidgets.QLabel('Servers'),self._servers)
 
         main_layout.addLayout(form_layout)
 
@@ -155,15 +150,12 @@ class SessionDialog(QtWidgets.QDialog):
 
         keyType = [b.text() for b in self._radioButtonGroup.buttons() if b.isChecked()][0]
 
-        servers = [self._servers.itemText(i) for i in range(self._servers.count())]
-
         self._data = collections.OrderedDict((('name',name),
                                               ('address',address),
                                               ('user',user),
                                               ('port',port),
                                               ('key',key),
-                                              ('keytype',keyType),
-                                              ('servers',servers)))
+                                              ('keytype',keyType)))
 
         return True, None
 

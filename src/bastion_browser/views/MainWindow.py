@@ -108,20 +108,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadSessions(self):
 
         sessionsPath = sessionsDatabasePath()
-        if not os.path.exists(sessionsPath):
-            return
 
-        with open(sessionsPath,'r') as fin:
-            sessions = yaml.unsafe_load(fin)
-
-        sessionsModel = self._sessionListView.model()
-        sessionsModel.clear()
-
-        for session in sessions:
-            self._sessionListView.addSession(session)
-
-        logging.info('Sessions successfully loaded')
-
+        sessionModel = self._sessionListView.model()
+        sessionModel.loadSessions(sessionsPath)
+        
     def onClearSessions(self):
 
         sessionModel = self._sessionListView.model()
@@ -141,7 +131,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._targetFileSystem.setModel(remoteFileSystemModel)
         self._targetFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
 
-
     def onQuitApplication(self):
         """Event called when the application is exited.
         """
@@ -153,13 +142,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onSaveSessions(self):
 
-        sessionModel = self._sessionListView.model()
-        currentSessions = [sessionModel.data(sessionModel.index(i,0),QtCore.Qt.UserRole) for i in range(sessionModel.rowCount())]
-        
-        with open(sessionsDatabasePath(),'w') as fout:
-            yaml.dump(currentSessions,fout)
+        sessionsModel = self._sessionListView.model()
 
-        logging.info('Sessions saved to {}'.format(sessionsDatabasePath()))
+        sessionsModel.saveSessions(sessionsDatabasePath())
 
     @property
     def sessionListView(self):
