@@ -12,7 +12,9 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
     sections = ['Name','Size','Type','Date Modified']
 
-    def __init__(self, sshSession, server, startingDirectory, *args, **kwargs):
+    addToFavoritesSignal = QtCore.pyqtSignal(str)
+
+    def __init__(self, sshSession, serverIndex, startingDirectory, *args, **kwargs):
 
         super(IFileSystemModel,self).__init__(*args, **kwargs)
 
@@ -23,13 +25,21 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self._sshSession = sshSession
 
-        self._server = server
+        self._serverIndex = serverIndex
 
         self.setDirectory(startingDirectory)
+
+    def addToFavorites(self):
+
+        self.addToFavoritesSignal.emit(self._currentDirectory)
 
     def columnCount(self, parent=None):
         
         return 4
+
+    def currentDirectory(self):
+
+        return self._currentDirectory
 
     def data(self, index, role):
 
@@ -45,6 +55,9 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         elif role == QtCore.Qt.DecorationRole:
             if col == 0:
                 return self._icons[row]
+
+        elif role == QtCore.Qt.ToolTipRole:
+            return self._currentDirectory
 
     @abc.abstractmethod
     def editFile(self, path):
@@ -85,6 +98,10 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             return
 
     @abc.abstractmethod
+    def favorites(self):
+        pass
+
+    @abc.abstractmethod
     def removeEntry(self, path):
         pass
 
@@ -95,6 +112,10 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
     def rowCount(self, parent=None):
         
         return len(self._entries)
+
+    def serverIndex(self):
+
+        return self._serverIndex
 
     @abc.abstractmethod
     def setDirectory(self, directory):

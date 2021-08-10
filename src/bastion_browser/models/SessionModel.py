@@ -1,3 +1,4 @@
+import collections
 import io
 import logging
 import os
@@ -15,9 +16,9 @@ class RootNode(object):
 
         self._children = []
 
-    def clear(self):
-
-        self._children = []
+    def addChild(self, child):
+        child._parent = self
+        self._children.append(child)
 
     def child(self, row):
         if row >= 0 and row < self.childCount():
@@ -25,6 +26,10 @@ class RootNode(object):
 
     def childCount(self):
         return len(self._children)
+
+    def clear(self):
+
+        self._children = []
 
     def columnCount(self):
         return 1
@@ -35,17 +40,13 @@ class RootNode(object):
     def parent(self):
         return None
 
-    def row(self):
-        return 0
-
-    def addChild(self, child):
-        child._parent = self
-        self._children.append(child)
-
     def removeChild(self, child):
 
         if child in self._children:
             del self._children[self._children.index(child)]
+
+    def row(self):
+        return 0
 
 class SessionNode(object):
     def __init__(self, data, parent):
@@ -103,30 +104,41 @@ class ServerNode(object):
 
         self._parent = parent
 
-    def data(self, column):
-        return self._name
+        self._favorites = {'local': [], 'remote': []}
 
-    def columnCount(self):
-        return 1
+    def addChild(self, child):
 
-    def childCount(self):
-        return 0
+        child._parent = self
+        self._children.append(child)
+
+    def addFavorite(self, fileSystemType, path):
+
+        if not path in self._favorites[fileSystemType]:
+            self._favorites[fileSystemType].append(path)
 
     def child(self, row):
         return None
 
+    def childCount(self):
+        return 0
+
+    def columnCount(self):
+        return 1
+
+    def data(self, column):
+        return self._favorites
+
+    def name(self):
+        return self._name
+
     def parent(self):
         return self._parent
 
-    def row(self):
-        return self._parent._children.index(self)
-
-    def addChild(self, child):
-        child._parent = self
-        self._children.append(child)
-
     def removeChild(self, child):
         pass
+
+    def row(self):
+        return self._parent._children.index(self)
 
 class SessionModel(QtCore.QAbstractItemModel):
 
@@ -163,7 +175,7 @@ class SessionModel(QtCore.QAbstractItemModel):
             sessionNode (SessionNode): the session node
         """
 
-        servers = [sessionNode.child(i).data(0) for i in range(sessionNode.childCount())]
+        servers = [sessionNode.child(i).name() for i in range(sessionNode.childCount())]
         if serverName in servers:
             logging.error('A server with name {} already exists'.format(serverName))
             return
@@ -179,10 +191,26 @@ class SessionModel(QtCore.QAbstractItemModel):
         """
 
         sessionNode = SessionNode(data, self._root)
-        for server in data['servers']:
-            sessionNode.addChild(ServerNode(server,sessionNode))
+        for server in data.get('servers',[]):
+            serverNode = ServerNode(server,sessionNode)
+            for fsType, files in data['servers'][server].items():
+                for f in files:
+                    serverNode.addFavorite(fsType,f)
+            sessionNode.addChild(serverNode)
         self._root.addChild(sessionNode)
         self.layoutChanged.emit()
+
+    def addToFavorites(self, serverIndex, fileSystemType, currentDirectory):
+        """Add a favorite to a server.
+
+        Args:
+            serverIndex (QtCore.QModelIndex): the server index
+            fileSystemType (str): either 'local' or 'remote'
+            currentDirectory (str): the path to be added to favorites
+        """
+
+        serverNode = serverIndex.internalPointer()
+        serverNode.addFavorite(fileSystemType,currentDirectory)
 
     def clear(self):
         """Clear the model.
@@ -266,7 +294,7 @@ class SessionModel(QtCore.QAbstractItemModel):
             if isinstance(node,SessionNode):
                 return node.data(index.column())['name']
             elif isinstance(node,ServerNode):
-                return node.data(index.column())
+                return node.name()
             else:
                 return None
         elif role == QtCore.Qt.DecorationRole:
@@ -351,9 +379,9 @@ class SessionModel(QtCore.QAbstractItemModel):
             sessionIndex (QtCore.QModelIndex): the index of the session
             newSessionData (dict): the session data
         """
-        
-        servers = [self.data(self.index(i,0,sessionIndex),QtCore.Qt.DisplayRole) for i in range(self.rowCount(sessionIndex))]
-        newSessionData['servers'] = servers
+
+        serverNodes = [self.index(i,0,sessionIndex).internalPointer() for i in range(self.rowCount(sessionIndex))]
+        newSessionData['servers'] = collections.OrderedDict([(n.name(),n.data(0)) for n in serverNodes])
         self.removeRow(sessionIndex,sessionIndex.parent())
         self.addSession(newSessionData)
 
@@ -407,19 +435,6 @@ class SessionModel(QtCore.QAbstractItemModel):
     
         return index.internalPointer().childCount()
 
-    def updateSession(self, sessionIndex, newSessionData):
-        """Update  session with new data.
-
-        Args:
-            sessionIndex (QtCore.QModelIndex): the index of the session
-            newSessionData (dict): the session data
-
-        """
-
-        sessionNode = sessionIndex.internalPointer()
-        sessionNode.setData(newSessionData)
-        self.layoutChanged.emit()
-
     def saveSessions(self, sessionsFile):
         """Save the current sessions to a YAML file.
 
@@ -433,8 +448,11 @@ class SessionModel(QtCore.QAbstractItemModel):
         for sessionNode in sessionNodes:
             data = sessionNode.data(0)
             serverNodes = [sessionNode.child(i) for i in range(sessionNode.childCount())]
-            serverNames = [serverNode.data(0) for serverNode in serverNodes]
-            data['servers'] = serverNames
+            serverNames = [serverNode.name() for serverNode in serverNodes]
+            serverFavorites = [serverNode.data(0) for serverNode in serverNodes]
+            data['servers'] = collections.OrderedDict()
+            for server,favorites in zip(serverNames,serverFavorites):
+                data['servers'][server] = favorites
             sessionsData.append(data)
         
         try:
@@ -446,4 +464,19 @@ class SessionModel(QtCore.QAbstractItemModel):
 
         logging.info('Sessions saved to {}'.format(sessionsFile))
         
+    def updateSession(self, sessionIndex, newSessionData):
+        """Update  session with new data.
+
+        Args:
+            sessionIndex (QtCore.QModelIndex): the index of the session
+            newSessionData (dict): the session data
+
+        """
+
+        serverNodes = [self.index(i,0,sessionIndex).internalPointer() for i in range(self.rowCount(sessionIndex))]
+        newSessionData['servers'] = collections.OrderedDict([(n.name(),n.data(0)) for n in serverNodes])
+
+        sessionNode = sessionIndex.internalPointer()
+        sessionNode.setData(newSessionData)
+        self.layoutChanged.emit()
 

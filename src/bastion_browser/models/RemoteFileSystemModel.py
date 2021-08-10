@@ -14,14 +14,18 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         tempFile = tempfile.mktemp()
         cmd = scp.SCPClient(self._sshSession.get_transport())
-        cmd.get('server/{}'.format(path),tempFile, recursive=True)
+        cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),path),tempFile, recursive=True)
         subprocess.call(['vi',tempFile])
+
+    def favorites(self):
+
+        return self._serverIndex.internalPointer().data(0)['remote']
 
     def removeEntry(self, selectedRow):
 
         for row in selectedRow[::-1]:
             selectedPath = os.path.join(self._currentDirectory,self._entries[row][0])
-            _, _, stderr = self._sshSession.exec_command('{} rm -rf {}'.format(self._server, selectedPath))
+            _, _, stderr = self._sshSession.exec_command('{} rm -rf {}'.format(self._serverIndex.internalPointer().name(), selectedPath))
             error = stderr.read().decode()
             if error:
                 logging.error(error)
@@ -45,7 +49,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         oldName = os.path.join(self._currentDirectory,oldName)
         newName = os.path.join(self._currentDirectory,newName)
         
-        _, _, stderr = self._sshSession.exec_command('{} mv {} {}'.format(self._server, oldName,newName))
+        _, _, stderr = self._sshSession.exec_command('{} mv {} {}'.format(self._serverIndex.internalPointr().name(), oldName,newName))
         error = stderr.read().decode()
         if error:
             logging.error(error)
@@ -57,7 +61,7 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         self._currentDirectory = directory
 
-        _, stdout, stderr = self._sshSession.exec_command('{} ls --group-directories --full-time -alpL {}'.format(self._server,self._currentDirectory))
+        _, stdout, stderr = self._sshSession.exec_command('{} ls --group-directories --full-time -alpL {}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory))
         error = stderr.read().decode()
         if error:
             logging.error(error)
@@ -88,6 +92,6 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         for (d,_) in data:
             cmd = scp.SCPClient(self._sshSession.get_transport())
-            cmd.put(d, remote_path='server/{}'.format(self._currentDirectory), recursive=True)
+            cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
 
         self.setDirectory(self._currentDirectory)

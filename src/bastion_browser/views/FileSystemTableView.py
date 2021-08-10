@@ -1,5 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from bastion_browser.models.IFileSystemModel import IFileSystemModel
+from bastion_browser.utils.Gui import mainWindow
+
 class FileSystemTableView(QtWidgets.QTableView):
 
     def __init__(self, *args, **kwargs):
@@ -40,22 +43,51 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
-    def onShowContextualMenu(self, point):
+    def onAddToFavorites(self):
 
-        menu = QtWidgets.QMenu()
+        if self.model() is None:
+            return
 
-        selectedRow = self.indexAt(point).row()
+        self.model().addToFavorites()
 
-        action = menu.addAction('Rename')
-        action.triggered.connect(lambda : self.onRenameEntry(selectedRow))
+    def onGoToFavorite(self, path):
 
-        menu.addAction(action)
-        menu.exec_(QtGui.QCursor.pos())
+        self.model().setDirectory(path)
 
     def onRenameEntry(self, selectedRow):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Rename Entry Dialog', 'Enter new name:')
         if ok and text.strip():
             self.model().renameEntry(selectedRow, text.strip())
+
+    def onShowContextualMenu(self, point):
+
+        if self.model() is None:
+            return
+
+        menu = QtWidgets.QMenu()
+
+        selectedRow = self.indexAt(point).row()
+
+        renameAction = menu.addAction('Rename')
+        renameAction.triggered.connect(lambda : self.onRenameEntry(selectedRow))
+        menu.addAction(renameAction)
+
+        menu.addSeparator()
+
+        addToFavoritesAction = menu.addAction('Add to favorites')
+        addToFavoritesAction.triggered.connect(self.onAddToFavorites)
+        menu.addAction(addToFavoritesAction)
+
+        favoritesMenu = QtWidgets.QMenu('Favorites')
+
+        favorites = self.model().favorites()
+        for fav in favorites:
+            favAction = favoritesMenu.addAction(fav)
+            favAction.triggered.connect(lambda : self.onGoToFavorite(fav))
+
+        menu.addMenu(favoritesMenu)
+
+        menu.exec_(QtGui.QCursor.pos())
 
     def setModel(self, model):
 

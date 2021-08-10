@@ -68,8 +68,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self._sessionListView = SessionTreeView()
 
-        self._serversComboBox = QtWidgets.QComboBox()
-
         self._sourceFileSystem = FileSystemTableView()
 
         self._targetFileSystem = FileSystemTableView()
@@ -111,7 +109,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         sessionModel = self._sessionListView.model()
         sessionModel.loadSessions(sessionsPath)
-        
+
+    def onAddToFavorites(self, fileSystemType, currentDirectory):
+
+        sessionModel = self._sessionListView.model()
+        sessionModel.addToFavorites(self._sessionListView.currentIndex(),fileSystemType, currentDirectory)
+
     def onClearSessions(self):
 
         sessionModel = self._sessionListView.model()
@@ -121,15 +124,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.loadSessions()
 
-    def onOpenBrowsers(self, sshSession, server):
+    def onOpenBrowsers(self, sshSession, serverIndex):
 
-        fileSystemModel = LocalFileSystemModel(sshSession, server, '.')
-        self._sourceFileSystem.setModel(fileSystemModel)
+        localFileSystemModel = LocalFileSystemModel(sshSession, serverIndex, '.')
+        self._sourceFileSystem.setModel(localFileSystemModel)
         self._sourceFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
 
-        remoteFileSystemModel = RemoteFileSystemModel(sshSession, server, '/')
+        remoteFileSystemModel = RemoteFileSystemModel(sshSession, serverIndex, '/')
         self._targetFileSystem.setModel(remoteFileSystemModel)
         self._targetFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
+
+        localFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('local',path))
+        remoteFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('remote',path))
 
     def onQuitApplication(self):
         """Event called when the application is exited.

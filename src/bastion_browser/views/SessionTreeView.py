@@ -13,7 +13,7 @@ from bastion_browser.utils.Platform import baseDirectory
 
 class SessionTreeView(QtWidgets.QTreeView):
 
-    openBrowsers = QtCore.pyqtSignal(paramiko.client.SSHClient,str)
+    openBrowsers = QtCore.pyqtSignal(paramiko.client.SSHClient,QtCore.QModelIndex)
     
     def __init__(self,*args,**kwargs):
 
@@ -88,9 +88,7 @@ class SessionTreeView(QtWidgets.QTreeView):
             logging.error('The ssh connection is not established')
             return
 
-        serverName = node.data(0)
-
-        self.openBrowsers.emit(sshSession,serverName) 
+        self.openBrowsers.emit(sshSession,currentIndex) 
         
     def onConnect(self):
 

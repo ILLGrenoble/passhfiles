@@ -15,6 +15,10 @@ class LocalFileSystemModel(IFileSystemModel):
 
         subprocess.call(['gedit',path])
 
+    def favorites(self):
+
+        return self._serverIndex.internalPointer().data(0)['local']
+
     def removeEntry(self, selectedRows):
 
         for row in selectedRows[::-1]:
@@ -81,6 +85,6 @@ class LocalFileSystemModel(IFileSystemModel):
 
         for (d,_) in data:
             cmd = scp.SCPClient(self._sshSession.get_transport())
-            cmd.get('{}/{}'.format(self._server, d),self._currentDirectory, recursive=True)
+            cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
 
         self.setDirectory(self._currentDirectory)
