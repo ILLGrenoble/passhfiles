@@ -43,7 +43,7 @@ class PreferencesDialog(QtWidgets.QDialog):
 
         main_layout.addWidget(self._button_box)
 
-        self.setGeometry(0, 0, 600, 250)
+        self.setGeometry(0, 0, 600, 150)
 
         self.setLayout(main_layout)
 

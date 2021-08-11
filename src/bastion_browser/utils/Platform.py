@@ -22,6 +22,10 @@ def applicationKeyPath():
 
     return os.path.join(applicationDirectory(),'application_key.yml')
 
+def iconsPath():
+
+    return os.path.join(baseDirectory(),'icons')
+
 def preferencesPath():
 
     return os.path.join(applicationDirectory(),'preferences.yml')

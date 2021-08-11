@@ -70,7 +70,7 @@ class SessionDialog(QtWidgets.QDialog):
 
         self._password = QtWidgets.QLineEdit()
         self._password.setEchoMode(QtWidgets.QLineEdit.Password)
-        print(self._data)
+
         password = REFKEY.decrypt(self._data['password']).decode() if self._data['password'] else ''
         self._password.setText(password)
 

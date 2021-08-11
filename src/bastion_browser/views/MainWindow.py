@@ -7,14 +7,14 @@ import socket
 import sys
 import yaml
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import bastion_browser
 from bastion_browser.dialogs.PreferencesDialog import PreferencesDialog
 from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
 from bastion_browser.models.RemoteFileSystemModel import RemoteFileSystemModel
-from bastion_browser.utils.Platform import preferencesPath, sessionsDatabasePath
+from bastion_browser.utils.Platform import iconsPath, preferencesPath, sessionsDatabasePath
 from bastion_browser.utils.ProgressBar import progressBar
 from bastion_browser.views.FileSystemTableView import FileSystemTableView
 from bastion_browser.views.SessionTreeView import SessionTreeView
@@ -56,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileMenu.addAction(clearSessionsAction)
 
         restoreSessionsAction = QtWidgets.QAction('&Restore Session(s)', self)
-        restoreSessionsAction.setStatusTip('Clear all sessions')
+        restoreSessionsAction.setStatusTip('Restore sessions')
         restoreSessionsAction.triggered.connect(self.onLoadSessions)
         fileMenu.addAction(restoreSessionsAction)
 
@@ -74,6 +74,34 @@ class MainWindow(QtWidgets.QMainWindow):
         exitAction.setStatusTip('Exit')
         exitAction.triggered.connect(self.onQuitApplication)
         fileMenu.addAction(exitAction)
+
+    def _buildToolBars(self):
+
+        newSessionAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsPath(),'new_session.png')), 'New session', self)
+        newSessionAction.triggered.connect(self._sessionListView.onAddSession)
+
+        saveSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsPath(),'save_sessions.png')), 'Save session(s)', self)
+        saveSessionsAction.triggered.connect(self.onSaveSessions)
+
+        clearSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsPath(),'clear_sessions.png')), 'Clear session(s)', self)
+        clearSessionsAction.triggered.connect(self.onClearSessions)
+
+        restoreSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsPath(),'restore_sessions.png')), 'Restore session(s)', self)
+        restoreSessionsAction.triggered.connect(self.onLoadSessions)
+
+        preferencesAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsPath(),'preferences.png')), 'Settings', self)
+        preferencesAction.triggered.connect(self.onSetPreferences)
+
+        exitAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsPath(),'exit.png')), 'Exit application', self)
+        exitAction.triggered.connect(self.onQuitApplication)
+
+        self.toolbar = self.addToolBar('Toolbar')
+        self.toolbar.addAction(newSessionAction)
+        self.toolbar.addAction(saveSessionsAction)
+        self.toolbar.addAction(clearSessionsAction)
+        self.toolbar.addAction(restoreSessionsAction)
+        self.toolbar.addAction(preferencesAction)
+        self.toolbar.addAction(exitAction)
 
     def _init_ui(self):
 
@@ -113,9 +141,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._mainFrame.setLayout(mainLayout)
 
+        self._buildToolBars()
         self._build_menu()
 
-        iconPath = os.path.join(bastion_browser.__path__[0], 'icons', 'bastion_browser.png')
+        iconPath = os.path.join(iconsPath(), 'bastion_browser.png')
         self.setWindowIcon(QtGui.QIcon(iconPath))
 
         self.show()
