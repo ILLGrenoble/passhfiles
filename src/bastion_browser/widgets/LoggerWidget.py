@@ -48,6 +48,9 @@ class LoggerWidget(logging.Handler):
     @property
     def widget(self):
         """Return the underlying widget used for displaying the log.
+
+        Returns:
+            QtWidgets.QWidget: the widget
         """
 
         return self._widget

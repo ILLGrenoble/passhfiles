@@ -7,8 +7,9 @@ import socket
 import sys
 import yaml
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 
+import bastion_browser
 from bastion_browser.dialogs.PreferencesDialog import PreferencesDialog
 from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
@@ -28,7 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.loadSessions()
 
-        self.loadPreferences()
+        self.loadPreferencesFile()
 
     def _build_menu(self):
         """Build the menu.
@@ -94,6 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
         logger = LoggerWidget(self)
         logger.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         logging.getLogger().addHandler(logger)
+        logging.getLogger().setLevel(logging.INFO)
 
         self.setCentralWidget(self._mainFrame)
 
@@ -106,15 +108,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._mainFrame.setLayout(mainLayout)
 
-        self._sessionListView.openBrowsers.connect(self.onOpenBrowsers)
-
         self._build_menu()
+
+        iconPath = os.path.join(bastion_browser.__path__[0], 'icons', 'bastion_browser.png')
+        self.setWindowIcon(QtGui.QIcon(iconPath))
 
         self.show()
 
-        logging.getLogger().setLevel(logging.INFO)
+        self._sessionListView.openBrowsers.connect(self.onOpenBrowsers)
 
-    def loadPreferences(self):
+    def loadPreferencesFile(self):
 
         if not os.path.exists(preferencesPath()):
             return

@@ -50,6 +50,12 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         self.model().addToFavorites()
 
+    def onCreateDirectory(self):
+
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Rename Entry Dialog', 'Enter new name:')
+        if ok and text.strip():
+            self.model().createDirectory(text.strip())
+
     def onGoToFavorite(self, path):
 
         self.model().setDirectory(path)
@@ -67,6 +73,10 @@ class FileSystemTableView(QtWidgets.QTableView):
         menu = QtWidgets.QMenu()
 
         selectedRow = self.indexAt(point).row()
+
+        createDirectoryAction = menu.addAction('Create Directory')
+        createDirectoryAction.triggered.connect(self.onCreateDirectory)
+        menu.addAction(createDirectoryAction)
 
         renameAction = menu.addAction('Rename')
         renameAction.triggered.connect(lambda : self.onRenameEntry(selectedRow))

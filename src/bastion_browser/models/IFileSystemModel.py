@@ -33,6 +33,10 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self.addToFavoritesSignal.emit(self._currentDirectory)
 
+    @abc.abstractmethod
+    def createDirectory(self, directoryName):
+        pass
+
     def columnCount(self, parent=None):
         
         return 4
@@ -61,6 +65,10 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
     @abc.abstractmethod
     def editFile(self, path):
+        pass
+
+    @abc.abstractmethod
+    def favorites(self):
         pass
 
     def flags(self, index):
@@ -94,12 +102,6 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             self.setDirectory(fullPath)
         else:
             self.editFile(fullPath)
-
-            return
-
-    @abc.abstractmethod
-    def favorites(self):
-        pass
 
     @abc.abstractmethod
     def removeEntry(self, path):

@@ -10,7 +10,20 @@ from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
 
 class RemoteFileSystemModel(IFileSystemModel):
-            
+
+    def createDirectory(self, directoryName):
+
+        directoryName = os.path.join(self._currentDirectory,directoryName)
+
+        _, _, stderr = self._sshSession.exec_command('{} mkdir {}'.format(self._serverIndex.internalPointer().name(), directoryName))
+        error = stderr.read().decode()
+        if error:
+            logging.error(error)
+            return
+        else:
+            self.setDirectory(self._currentDirectory)
+
+
     def editFile(self, path):
 
         if not PREFERENCES['editor']:
@@ -57,7 +70,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         oldName = os.path.join(self._currentDirectory,oldName)
         newName = os.path.join(self._currentDirectory,newName)
         
-        _, _, stderr = self._sshSession.exec_command('{} mv {} {}'.format(self._serverIndex.internalPointr().name(), oldName,newName))
+        _, _, stderr = self._sshSession.exec_command('{} mv {} {}'.format(self._serverIndex.internalPointer().name(), oldName,newName))
         error = stderr.read().decode()
         if error:
             logging.error(error)

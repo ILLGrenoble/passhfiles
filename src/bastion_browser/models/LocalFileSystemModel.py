@@ -12,6 +12,17 @@ from bastion_browser.utils.Numbers import sizeOf
 
 class LocalFileSystemModel(IFileSystemModel):
 
+    def createDirectory(self, directoryName):
+
+        directoryName = os.path.join(self._currentDirectory,directoryName)
+
+        try:
+            os.makedirs(directoryName)
+        except Exception as e:
+            logging.error(str(e))
+        else:
+            self.setDirectory(self._currentDirectory)
+
     def editFile(self, path):
 
         if not PREFERENCES['editor']:
