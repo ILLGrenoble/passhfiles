@@ -8,6 +8,7 @@ import scp
 from bastion_browser.kernel.Preferences import PREFERENCES
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
+from bastion_browser.utils.ProgressBar import progressBar
 
 class RemoteFileSystemModel(IFileSystemModel):
 
@@ -111,8 +112,10 @@ class RemoteFileSystemModel(IFileSystemModel):
 
     def transferData(self, data):
 
-        for (d,_) in data:
+        progressBar.reset(len(data))
+        for i, (d,_) in enumerate(data):
             cmd = scp.SCPClient(self._sshSession.get_transport())
             cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+            progressBar.update(i+1)
 
         self.setDirectory(self._currentDirectory)

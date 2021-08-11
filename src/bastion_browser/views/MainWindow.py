@@ -15,6 +15,7 @@ from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
 from bastion_browser.models.RemoteFileSystemModel import RemoteFileSystemModel
 from bastion_browser.utils.Platform import preferencesPath, sessionsDatabasePath
+from bastion_browser.utils.ProgressBar import progressBar
 from bastion_browser.views.FileSystemTableView import FileSystemTableView
 from bastion_browser.views.SessionTreeView import SessionTreeView
 from bastion_browser.widgets.LoggerWidget import LoggerWidget
@@ -79,6 +80,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._mainFrame = QtWidgets.QFrame(self)
         
         self._sessionListView = SessionTreeView()
+        self._progressBar = QtWidgets.QProgressBar()
+        progressBar.setProgressWidget(self._progressBar)
+        self.statusBar().addPermanentWidget(QtWidgets.QLabel('Progress'))
+        self.statusBar().addPermanentWidget(self._progressBar)
 
         self._sourceFileSystem = FileSystemTableView()
 
