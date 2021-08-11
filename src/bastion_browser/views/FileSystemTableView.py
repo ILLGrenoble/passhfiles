@@ -4,8 +4,15 @@ from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Gui import mainWindow
 
 class FileSystemTableView(QtWidgets.QTableView):
+    """Implements a view to the file system (local or remote). The view is implemented as a table view with four 
+    columns where the first column is the name of a file or directory, the second column is the size of the file,
+    the third column is the type of the entry (file or directory) and the fourth column is the date of the last 
+    modification of the entry.
+    """
 
     def __init__(self, *args, **kwargs):
+        """Consructor.
+        """
 
         super(FileSystemTableView,self).__init__(*args, **kwargs)
 
@@ -20,6 +27,9 @@ class FileSystemTableView(QtWidgets.QTableView):
 
     def dropEvent(self, event):
         """Event triggered when the dragged item is dropped into this widget.
+
+        Args:
+            PyQt5.QtGui.QDropEvent: the drop event
         """
 
         if event.source() == self:
@@ -32,6 +42,11 @@ class FileSystemTableView(QtWidgets.QTableView):
         self.model().transferData(selectedData)
 
     def keyPressEvent(self, event):
+        """Event triggered when user press a key of the keyboard.
+
+        Args:
+            PyQt5.QtGui.QKeyEvent: the key press event
+        """
         
         key = event.key()
 
@@ -39,11 +54,13 @@ class FileSystemTableView(QtWidgets.QTableView):
 
             selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
 
-            self.model().removeEntry(selectedRows)
+            self.model().removeEntries(selectedRows)
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
     def onAddToFavorites(self):
+        """Called when the user add a path to the favorites.
+        """
 
         if self.model() is None:
             return
@@ -51,21 +68,41 @@ class FileSystemTableView(QtWidgets.QTableView):
         self.model().addToFavorites()
 
     def onCreateDirectory(self):
+        """Called when the user creates a directory.
+        """
 
         text, ok = QtWidgets.QInputDialog.getText(self, 'Rename Entry Dialog', 'Enter new name:')
         if ok and text.strip():
             self.model().createDirectory(text.strip())
 
     def onGoToFavorite(self, path):
+        """Called when the user select one path among the favorites.
+        
+        Updates the file system with the selected directory.
+
+        Args:
+            path (str): the selected path
+        """
 
         self.model().setDirectory(path)
 
     def onRenameEntry(self, selectedRow):
+        """Called when the user rename one entry.
+
+        Args:
+            selectedRow (int): the index of the entry to rename
+        """
+        
         text, ok = QtWidgets.QInputDialog.getText(self, 'Rename Entry Dialog', 'Enter new name:')
         if ok and text.strip():
             self.model().renameEntry(selectedRow, text.strip())
 
     def onShowContextualMenu(self, point):
+        """Pops up a contextual menu when the user right-clicks on the file system.
+
+        Args:
+            point (PyQt5.QtCore.QPoint): the point where the user right-clicked
+        """
 
         if self.model() is None:
             return
@@ -100,6 +137,11 @@ class FileSystemTableView(QtWidgets.QTableView):
         menu.exec_(QtGui.QCursor.pos())
 
     def setModel(self, model):
+        """Set the model.
+
+        Args:
+            LocalFileSystemModel or RemoteFileSystemModel: the model
+        """
 
         super(FileSystemTableView,self).setModel(model)
 

@@ -12,10 +12,18 @@ from bastion_browser.utils.Numbers import sizeOf
 from bastion_browser.utils.ProgressBar import progressBar
 
 class LocalFileSystemModel(IFileSystemModel):
+    """Implements the IFileSystemModel interface in case of a local file system.
+    """
 
     def createDirectory(self, directoryName):
+        """Creates a directory.
 
-        directoryName = os.path.join(self._currentDirectory,directoryName)
+        Args:
+            directoryName: the name of the directory
+        """
+
+        if not os.path.isabs(directoryName):
+            directoryName = os.path.join(self._currentDirectory,directoryName)
 
         try:
             os.makedirs(directoryName)
@@ -25,6 +33,11 @@ class LocalFileSystemModel(IFileSystemModel):
             self.setDirectory(self._currentDirectory)
 
     def editFile(self, path):
+        """Edit the file using a text editor (set via the preferences settings).
+
+        Args:
+            path: the path of the file to be edited
+        """
 
         if not PREFERENCES['editor']:
             logging.error('No text editor set in the preferences')
@@ -36,10 +49,20 @@ class LocalFileSystemModel(IFileSystemModel):
             logging.error(str(e))
 
     def favorites(self):
+        """Return the favorites paths.
+
+        Returns:
+            list: the list of favorites
+        """
 
         return self._serverIndex.internalPointer().data(0)['local']
 
-    def removeEntry(self, selectedRows):
+    def removeEntries(self, selectedRows):
+        """Remove some entries of the model.
+
+        Args:
+            selectedRows (list of int): the list of indexes of the entries to be removed
+        """
 
         for row in selectedRows[::-1]:
             selectedPath = os.path.join(self._currentDirectory,self._entries[row][0])
@@ -51,6 +74,12 @@ class LocalFileSystemModel(IFileSystemModel):
         self.setDirectory(self._currentDirectory)
 
     def renameEntry(self, selectedRow, newName):
+        """Rename a given entry.
+
+        Args:
+            selectedRow (int): the index of the entry to rename
+            newName (str): the new name
+        """
 
         oldName = self._entries[selectedRow][0]
         if oldName == newName:
@@ -71,8 +100,18 @@ class LocalFileSystemModel(IFileSystemModel):
         self.layoutChanged.emit()
 
     def setDirectory(self, directory):
+        """Sets a directory.
 
-        directory = os.path.abspath(directory)
+        This will trigger a full update of the model.
+
+        Args:
+            directory (str): the directory
+        """
+
+        if not os.path.isabs(directory):
+            directory = os.path.abspath(directory)
+        
+        # If the input argument was a filename, get its base directory
         if not os.path.isdir(directory):
             directory = os.path.dirname(directory)
 
@@ -84,6 +123,7 @@ class LocalFileSystemModel(IFileSystemModel):
 
         self._currentDirectory = directory
 
+        # Sort the contents of the directory (.. first, then the sorted directories and finally the sorted files)
         sortedContents = [('..',True)]
         sortedContents += sorted([(c,True) for c in contents if os.path.isdir(os.path.join(self._currentDirectory,c))])
         sortedContents += sorted([(c,False) for c in contents if not os.path.isdir(os.path.join(self._currentDirectory,c))])
@@ -102,10 +142,17 @@ class LocalFileSystemModel(IFileSystemModel):
         self.layoutChanged.emit()
 
     def transferData(self, data):
+        """Transfer some data (directories and/or files) from a remote host to the local file system.
+
+        Args:
+            data (list): the list of data to be transfered
+        """
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
         progressBar.reset(len(data))
         for i, (d,_) in enumerate(data):
-            cmd = scp.SCPClient(self._sshSession.get_transport())
+            cmd = scp.SCPClient(sshSession.get_transport())
             cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
             progressBar.update(i+1)
 

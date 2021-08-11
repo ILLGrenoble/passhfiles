@@ -1,5 +1,7 @@
 class ProgressBar:
     """This class implements a progress bar for the whole application.
+
+    It is implemented as a Singleton.
     """
 
     _instance = None
@@ -10,10 +12,14 @@ class ProgressBar:
         return class_._instance
 
     def __init__(self):
+        """The constructor.
+        """
 
         self._progressWidget = None
 
     def setProgressWidget(self, progressWidget):
+        """Bind a widget to the progress bar.
+        """
 
         self._progressWidget = progressWidget
 
@@ -21,7 +27,7 @@ class ProgressBar:
         """Initializes the progress bar.
 
         Args:
-            n_steps (int): the total number of steps of the task to monitor
+            nSteps (int): the total number of steps of the task to monitor
         """
 
         if not self._progressWidget:
@@ -48,5 +54,5 @@ class ProgressBar:
         except AttributeError:
             return
 
-# Create an instance of the progrss bar (singleton)
+# Create an instance of the progress bar (singleton)
 progressBar = ProgressBar()

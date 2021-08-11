@@ -9,12 +9,20 @@ class MyMeta(abc.ABCMeta, type(QtCore.QAbstractTableModel)):
     pass
 
 class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
-
+    """Interface for a model of file system.
+    """
+    
     sections = ['Name','Size','Type','Date Modified']
 
     addToFavoritesSignal = QtCore.pyqtSignal(str)
 
-    def __init__(self, sshSession, serverIndex, startingDirectory, *args, **kwargs):
+    def __init__(self, serverIndex, startingDirectory, *args, **kwargs):
+        """Constructor.
+
+        Args:
+            serverIndex (QtCore.QModelIndex): the index of the server to browse
+            startingDirectory (str): the starting directory
+        """
 
         super(IFileSystemModel,self).__init__(*args, **kwargs)
 
@@ -23,29 +31,51 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self._entries = []
 
-        self._sshSession = sshSession
-
         self._serverIndex = serverIndex
 
         self.setDirectory(startingDirectory)
 
     def addToFavorites(self):
+        """Add the current directory to favorites.
+        """
 
         self.addToFavoritesSignal.emit(self._currentDirectory)
 
     @abc.abstractmethod
     def createDirectory(self, directoryName):
+        """Creates a directory.
+
+        Args:
+            directoryName: the name of the directory
+        """
+
         pass
 
     def columnCount(self, parent=None):
+        """Return the number of columns of the table.
+
+        Returns:
+            int: the number of columns
+        """
         
         return 4
 
     def currentDirectory(self):
+        """Returns the curren directory.
+
+        Returns:
+            str: the path to the current directory
+        """
 
         return self._currentDirectory
 
     def data(self, index, role):
+        """Returns the data for a given index and role.
+
+        Args:
+            index (QtCore.QModelIndex): the index
+            role (int): the role
+        """
 
         if not index.isValid():
             return QtCore.QVariant()
@@ -65,17 +95,43 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
     @abc.abstractmethod
     def editFile(self, path):
+        """Edit the file using a text editor (set via the preferences settings).
+
+        Args:
+            path: the path of the file to be edited
+        """
+
         pass
 
     @abc.abstractmethod
     def favorites(self):
+        """Return the favorites paths.
+
+        Returns:
+            list: the list of favorites
+        """
+
         pass
 
     def flags(self, index):
+        """Retur the flags for a given index.
+
+        Returns:
+            int: the flag
+        """
 
         return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
 
     def getEntries(self,indexes):
+        """Returns the for a set of rows.
+
+        Args:
+            indexes (list of int): the indexes of the entries to fetch
+
+        Returns:
+            list: list of tuples where the 1st element is the full path of the entry and 2nd element 
+            is a boolean indicating whether the entry is a directory or not
+        """
 
         entries = []
 
@@ -87,11 +143,27 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         return entries
 
     def headerData(self, section, orientation, role):
+        """Return the header data for a given section, orientation and role.
+
+        Args:
+            section (int): the section
+            orientation (QtCore.Qt.Horizontal or QtCore.Qt.Vertical): the orientation
+            role (int): the role 
+        """
+
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return IFileSystemModel.sections[section]
 
     def onEnterDirectory(self, index):
+        """Called when the user double clicks on a model's entry. 
+        
+        The entry can be a directory or a file. In case of a folder, the folder will be entered in and in 
+        case of a file, the file will be opened in a text editor.
+
+        Args:
+            index (QtCore.QModelIndex): the index of the entry
+        """
 
         row = index.row()
 
@@ -104,25 +176,65 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             self.editFile(fullPath)
 
     @abc.abstractmethod
-    def removeEntry(self, path):
+    def removeEntries(self, path):
+        """Remove some entries of the model.
+
+        Args:
+            selectedRows (list of int): the list of indexes of the entries to be removed
+        """
+
         pass
 
     @abc.abstractmethod
     def renameEntry(self, selectedRow, newName):
+        """Rename a given entry.
+
+        Args:
+            selectedRow (int): the index of the entry to rename
+            newName (str): the new name
+        """
+
         pass
 
     def rowCount(self, parent=None):
+        """Returns the number of rows of the model.
+
+        Args:
+            parent (QtCore.QModelIndex): the parent index
+
+        Returns:
+            int: the number of rows
+        """
         
         return len(self._entries)
 
     def serverIndex(self):
+        """Returns the index of the server item.
+
+        Returns:
+            QtCore.QModelIndex: the index of the server item
+        """
 
         return self._serverIndex
 
     @abc.abstractmethod
     def setDirectory(self, directory):
+        """Sets a directory.
+
+        This will trigger a full update of the model.
+
+        Args:
+            directory (str): the directory
+        """
+
         pass
 
     @abc.abstractmethod
     def transferData(self, data):
+        """Transfer some data (directories and/or files).
+
+        Args:
+            data (list): the list of data to be transfered
+        """
+
         pass

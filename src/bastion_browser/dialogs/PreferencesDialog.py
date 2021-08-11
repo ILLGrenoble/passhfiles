@@ -1,22 +1,31 @@
 import collections
 import os
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
 from bastion_browser.kernel.Preferences import PREFERENCES, savePreferences, setPreferences
 from bastion_browser.utils.Platform import preferencesPath
 
 class PreferencesDialog(QtWidgets.QDialog):
+    """Dialog used for settings the preferences of the application.
+    """
 
     def __init__(self, parent):
+        """Constructor.
+
+        Args:
+            parent (PyQt5.QtWidgets.QWidget): the parent widget
+        """
 
         super(PreferencesDialog,self).__init__(parent)
 
-        self._init_ui()
+        self._initUi()
 
         self.setWindowTitle('Preferences settings dialog')
 
-    def _init_ui(self):
+    def _initUi(self):
+        """Setup the dialog.
+        """
 
         keyHLayout = QtWidgets.QHBoxLayout()
         self._editor = QtWidgets.QLineEdit()
@@ -50,6 +59,10 @@ class PreferencesDialog(QtWidgets.QDialog):
         self._browseEditor.clicked.connect(self.onBrowseEditor)
 
     def accept(self):
+        """Called when the user clicks on Accept button.
+
+        It validates the settings prior setting the preferences.
+        """
 
         isValidated, msg = self.validate()
 
@@ -61,17 +74,24 @@ class PreferencesDialog(QtWidgets.QDialog):
             errorMessageDialog.exec_()
             return
 
-        setPreferences(self._data)
+        setPreferences(self._data, save=True)
 
         savePreferences(preferencesPath())
 
         super(PreferencesDialog,self).accept()
 
     def data(self):
+        """Returns the dialog data.
+
+        Returns:
+            dict: the data
+        """
 
         return self._data
 
     def onBrowseEditor(self):
+        """Called when the user browse for a text editor.
+        """
 
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
                                                             'Browse path for txt editor',
@@ -84,8 +104,15 @@ class PreferencesDialog(QtWidgets.QDialog):
         self._editor.setText(filename)
 
     def validate(self):
+        """Validate the settings.
 
+        Returns:
 
+            tuple: a tuple whose 1st element is a boolean indicating whether the validation succeeded or not and 2nd 
+            element is a message storing the reasons of a failure in case of a failing validation.
+        """
+
+        # If set, the path to the text editor must exist
         editor = self._editor.text().strip()
         if editor and not os.path.exists(editor):
             return False, 'The path to text editor does not exist'
@@ -94,6 +121,3 @@ class PreferencesDialog(QtWidgets.QDialog):
                                               ('auto-connect',self._autoConnect.isChecked())))
 
         return True, None
-
-
-

@@ -8,9 +8,17 @@ PREFERENCES['editor'] = ''
 PREFERENCES['auto-connect'] = True
 
 def setPreferences(preferences):
+    """Set the preferences.
+    """
+
     PREFERENCES.update(preferences)
 
 def loadPreferences(preferencesFile):
+    """Load the prferences from a preference (YAML) file.
+
+    Args:
+        preferencesFile (str): the path to the preferences file
+    """
 
     try:
         with open(preferencesFile,'r') as fin:
@@ -23,6 +31,11 @@ def loadPreferences(preferencesFile):
         logging.info('Preferences successfully loaded')
     
 def savePreferences(preferencesFile):
+    """Save the preferences to a preference (YAML) file.
+
+    Args:
+        preferencesFile (str): the path to the preferences file
+    """
 
     try:
         with open(preferencesFile,'w') as fout:

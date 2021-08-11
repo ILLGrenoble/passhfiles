@@ -10,47 +10,115 @@ import yaml
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser import REFKEY
-from bastion_browser.utils.Platform import baseDirectory
+from bastion_browser.utils.Platform import iconsDirectory
 
-class RootNode(object):
+class RootNode:
+    """Implements the root object of the SessionsModel.
+    """
+    
     def __init__(self):
+        """Constructor.
+        """
 
         self._children = []
 
     def addChild(self, child):
+        """Add a child.
+        
+        The child must be a SessionNode.
+        """
+        
+        if not isinstance(child,SessionNode):
+            return
+
         child._parent = self
         self._children.append(child)
 
     def child(self, row):
+        """Return the child for a given row.
+
+        Args:
+            row (int): the row
+
+        Returns:
+            SessionNode: the child
+        """
+
         if row >= 0 and row < self.childCount():
             return self._children[row]
 
     def childCount(self):
+        """Return the number of children of the root node.
+
+        Returns:
+            int: the number of children
+        """
+
         return len(self._children)
 
     def clear(self):
+        """Clear the root node.
+        """
 
         self._children = []
 
     def columnCount(self):
+        """Returns the number of columns of the root node.
+
+        Returns:
+            int: the number of columns
+        """
+        
         return 1
 
     def data(self, column):
+        """Returns the data stored in the node.
+
+        Returns:
+            None: the data
+        """
+        
         return None
 
     def parent(self):
+        """Return the parent of the root node.
+
+            None: the parent
+        """
+        
         return None
 
     def removeChild(self, child):
+        """Remove a child from the children list.
+
+        Args:
+            SessionNode: the child to be removed
+        """
 
         if child in self._children:
             del self._children[self._children.index(child)]
 
     def row(self):
+        """Returns the row of this node regarding its parent.
+
+        Returns:
+            int: the row
+        """
+
         return 0
 
 class SessionNode(object):
+    """Implements a session node root object of the SessionsModel.
+    """
+    
     def __init__(self, data, parent):
+        """Constructor.
+
+        Args:
+            data (dict): the session data
+            parent (RootNode): the root node
+        """
+        
         self._data = data
 
         self._children = []
@@ -59,47 +127,122 @@ class SessionNode(object):
         self._sshSession = None
 
     def addChild(self, child):
+        """Add a child.
+        
+        The child must be a ServerNode.
+        """
+        
+        if not isinstance(child,ServerNode):
+            return
+
         child._parent = self
         self._children.append(child)
 
     def child(self, row):
+        """Return the child for a given row.
+
+        Args:
+            row (int): the row
+
+        Returns:
+            ServerNode: the child
+        """
+
         if row >= 0 and row < self.childCount():
             return self._children[row]
 
     def childCount(self):
+        """Return the number of children of the root node.
+
+        Returns:
+            int: the number of children
+        """
+
         return len(self._children)
 
     def columnCount(self):
+        """Returns the number of columns of the root node.
+
+        Returns:
+            int: the number of columns
+        """
+
         return 1
 
     def data(self, column):
+        """Returns the data stored in the node.
+
+        Returns:
+            dict: the data
+        """
+
         return self._data
 
     def parent(self):
+        """Return the parent of the session node.
+
+            RootNode: the parent
+        """
+
         return self._parent
 
     def removeChild(self, child):
+        """Remove a child from the children list.
+
+        Args:
+            SessionNode: the child to be removed
+        """
 
         if child in self._children:
             del self._children[self._children.index(child)]
 
     def row(self):
+        """Returns the row of this node regarding its parent.
+
+        Returns:
+            int: the row
+        """
+
         return self._parent._children.index(self)
 
     def setData(self, data):
+        """Sets the data for this session node.
+
+        Args:
+            data (dict): the data
+        """
 
         self._data = data
 
     def setSSHSession(self, sshSession):
+        """Set the SSH session.
+
+        Args:
+            sshSession (paramiko.client.SSHClient): the SSH session
+        """
 
         self._sshSession = sshSession
 
     def sshSession(self):
+        """Returns the SSH session.
+
+        Returns:
+            paramiko.client.SSHClient: the SSh session. None if not connected.
+        """
 
         return self._sshSession
 
 class ServerNode(object):
+    """Implements a session node root object of the SessionsModel.
+    """
+
     def __init__(self, name, parent):
+        """Constructor.
+
+        Args:
+            name: the name of the server.
+            parent (SessionNode): the parent
+        """
 
         self._name = name
 
@@ -108,40 +251,93 @@ class ServerNode(object):
         self._favorites = {'local': [], 'remote': []}
 
     def addChild(self, child):
+        """Add a child.
+        """
 
-        child._parent = self
-        self._children.append(child)
+        pass
 
     def addFavorite(self, fileSystemType, path):
+        """Add a favorite path to the favorites.
+
+        Args:
+            fileSystemType: either 'local' or 'remote'
+            path (str): the path to be added to favorites
+        """
+
+        if not fileSystemType in ('local','remote'):
+            return
 
         if not path in self._favorites[fileSystemType]:
             self._favorites[fileSystemType].append(path)
 
     def child(self, row):
+        """Return the child for a given row.
+
+        Args:
+            row (int): the row
+
+        Returns:
+            None
+        """
+
         return None
 
     def childCount(self):
+        """Return the number of children of the root node.
+
+        Returns:
+            int: the number of children
+        """
+
         return 0
 
     def columnCount(self):
         return 1
 
     def data(self, column):
+        """Returns the data stored in the node.
+
+        Returns:
+            dict: the data
+        """
+
         return self._favorites
 
     def name(self):
+        """Return the name of the server.
+
+        Returns:
+            str: the server's name
+        """
+        
         return self._name
 
     def parent(self):
+        """Return the parent of the server node.
+
+            SessionNode: the parent
+        """
+
         return self._parent
 
     def removeChild(self, child):
+        """Remove a child from the children list.
+        """
+
         pass
 
     def row(self):
+        """Returns the row of this node regarding its parent.
+
+        Returns:
+            int: the row
+        """
+
         return self._parent._children.index(self)
 
-class SessionModel(QtCore.QAbstractItemModel):
+class SessionsModel(QtCore.QAbstractItemModel):
+    """Implements a model for storing the SSH sessions.
+    """
 
     SessionData = QtCore.Qt.UserRole
 
@@ -159,9 +355,12 @@ class SessionModel(QtCore.QAbstractItemModel):
 
         Args:
             node (RootNode|SessionNode|ServerNode): the node
-            parentIndex (QtCore.QModelIndex): the index 
+            parentIndex (PyQt5.QtCore.QModelIndex): the index 
         """
         
+        if not isinstance(node,(RootNode,SessionNode,ServerNode)):
+            return
+
         if not parentIndex or not parentIndex.isValid():
             parent = self._root
         else:
@@ -205,7 +404,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Add a favorite to a server.
 
         Args:
-            serverIndex (QtCore.QModelIndex): the server index
+            serverIndex (PyQt5.QtCore.QModelIndex): the server index
             fileSystemType (str): either 'local' or 'remote'
             currentDirectory (str): the path to be added to favorites
         """
@@ -224,7 +423,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Return the column count of the model for a given index.
 
         Args:
-            index (QtCore.QmodelIndex): the index
+            index (PyQt5.QtCore.QmodelIndex): the index
         """
 
         if index is None or not index.isValid():
@@ -279,7 +478,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Return the data for a given index and role.
 
         Args:
-            index (QtCore.QModelIndex): the index
+            index (PyQt5.QtCore.QModelIndex): the index
             role (int): the role
         """
         
@@ -296,9 +495,9 @@ class SessionModel(QtCore.QAbstractItemModel):
                 return None
         elif role == QtCore.Qt.DecorationRole:
             if isinstance(node,SessionNode):
-                return QtGui.QIcon(os.path.join(baseDirectory(),'icons','session.png'))
+                return QtGui.QIcon(os.path.join(iconsDirectory(),'session.png'))
             elif isinstance(node,ServerNode):
-                return QtGui.QIcon(os.path.join(baseDirectory(),'icons','server.png'))
+                return QtGui.QIcon(os.path.join(iconsDirectory(),'server.png'))
             else:
                 return None
         elif role == QtCore.Qt.ToolTipRole:
@@ -315,14 +514,14 @@ class SessionModel(QtCore.QAbstractItemModel):
                 return '\n'.join(['{}: {}'.format(k,v) for k,v in tooltip])
             else:
                 return None
-        elif role == SessionModel.SessionData:
+        elif role == SessionsModel.SessionData:
             if isinstance(node,SessionNode):
                 return node.data(index.column())
             elif isinstance(node,ServerNode):
                 return node.data(index.column())
             else:
                 return None
-        elif role == SessionModel.SSHSession:
+        elif role == SessionsModel.SSHSession:
             if isinstance(node,SessionNode):
                 return node.sshSession()
             else:
@@ -336,7 +535,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         Args:
             row (int): the row
             column (int): the column
-            parentIndex (QtCore.QModelIndex): the parent index
+            parentIndex (PyQt5.QtCore.QModelIndex): the parent index
         """
 
         if not parentIndex or not parentIndex.isValid():
@@ -382,7 +581,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Move a session to another one.
 
         Args:
-            sessionIndex (QtCore.QModelIndex): the index of the session
+            sessionIndex (PyQt5.QtCore.QModelIndex): the index of the session
             newSessionData (dict): the session data
         """
 
@@ -395,7 +594,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Return the parent index of a given index.
 
         Args:
-            index (QtCore.QModelIndex): the index
+            index (PyQt5.QtCore.QModelIndex): the index
         """
         
         if index.isValid():
@@ -408,8 +607,8 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Remove a row from the model.
 
         Args:
-            index (QtCore.QModelIndex): the index to remove
-            parentIndex (QtCore.QModelIndex): the parent index of the index to remove
+            index (PyQt5.QtCore.QModelIndex): the index to remove
+            parentIndex (PyQt5.QtCore.QModelIndex): the parent index of the index to remove
         """
 
         self.beginRemoveRows(parentIndex,index.row(),index.row())
@@ -433,7 +632,7 @@ class SessionModel(QtCore.QAbstractItemModel):
         """Return the row count of the model for a given index.
 
         Args:
-            index (QtCore.QmodelIndex): the index
+            index (PyQt5.QtCore.QModelIndex): the index
         """
 
         if index is None or not index.isValid():
@@ -471,12 +670,11 @@ class SessionModel(QtCore.QAbstractItemModel):
         logging.info('Sessions saved to {}'.format(sessionsFile))
         
     def updateSession(self, sessionIndex, newSessionData):
-        """Update  session with new data.
+        """Update a given session with new data.
 
         Args:
-            sessionIndex (QtCore.QModelIndex): the index of the session
+            sessionIndex (PyQt5.QtCore.QModelIndex): the index of the session
             newSessionData (dict): the session data
-
         """
 
         serverNodes = [self.index(i,0,sessionIndex).internalPointer() for i in range(self.rowCount(sessionIndex))]

@@ -22,4 +22,4 @@ __repo__ = "https://code.ill.fr/si/python-projects/bastion-browser"
 
 __license__ = "GPL 3"
 
-__version__ = "0.0.0"
+__version__ = "1.0.0"

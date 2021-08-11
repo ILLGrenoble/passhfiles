@@ -7,6 +7,8 @@ from bastion_browser import REFKEY
 from bastion_browser.utils.Gui import mainWindow
 
 class SessionDialog(QtWidgets.QDialog):
+    """Dialog for setting up a new SSH session.
+    """
 
     defaultData = {'name':'my session',
                    'address':'bastion.ill.fr',
@@ -17,6 +19,13 @@ class SessionDialog(QtWidgets.QDialog):
                    'password':''}
 
     def __init__(self, parent, newSession, data=None):
+        """Constructor.
+
+        Args:
+            parent (PyQt5.QtWidgets.QWidget): the parent window
+            newSession (bool): indicates whether the dialog will be used to set a brand new session
+            data (dict): the session data
+        """
 
         super(SessionDialog,self).__init__(parent)
 
@@ -24,11 +33,13 @@ class SessionDialog(QtWidgets.QDialog):
 
         self._data = SessionDialog.defaultData if data is None else data
 
-        self._init_ui()
+        self._initUi()
 
         self.setWindowTitle('Open SSH session')
 
-    def _init_ui(self):
+    def _initUi(self):
+        """Setup the dialog.
+        """
 
         self._name = QtWidgets.QLineEdit()
         self._name.setText(self._data['name'])
@@ -102,6 +113,10 @@ class SessionDialog(QtWidgets.QDialog):
         self._browseKey.clicked.connect(self.onBrowsePrivateKey)
 
     def accept(self):
+        """Called when the user clicks on Accept button.
+
+        It validates the settings prior setting the SSH session.
+        """
 
         isValidated, msg = self.validate()
 
@@ -116,10 +131,17 @@ class SessionDialog(QtWidgets.QDialog):
         super(SessionDialog,self).accept()
 
     def data(self):
+        """Returns the dialog's data.
+
+        Returns:
+            dict: the dialog's data
+        """
 
         return self._data
 
     def onBrowsePrivateKey(self):
+        """Called when the user browses for a private key.
+        """
 
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,
                                                             'Open SSH private file',
@@ -132,13 +154,19 @@ class SessionDialog(QtWidgets.QDialog):
         self._key.setText(filename)
 
     def validate(self):
+        """Validate the settings.
+
+        Returns:
+            tuple: a tuple whose 1st element is a boolean indicating whether the validation succeeded or not and 2nd 
+            element is a message storing the reasons of a failure in case of a failing validation.
+        """
 
         name = self._name.text().strip()
         if not name:
             return False, 'No session name provided'
         mw = mainWindow(self)
-        sessionModel = mw.sessionListView.model()
-        sessionNames = [sessionModel.data(sessionModel.index(i,0),QtCore.Qt.DisplayRole) for i in range(sessionModel.rowCount())]
+        sessionsModel = mw.sessionsTreeView.model()
+        sessionNames = [sessionsModel.data(sessionsModel.index(i,0),QtCore.Qt.DisplayRole) for i in range(sessionsModel.rowCount())]
         if self._newSession and name in sessionNames:
             return False, 'A session with that name already exists'
 
@@ -160,6 +188,7 @@ class SessionDialog(QtWidgets.QDialog):
 
         keyType = [b.text() for b in self._radioButtonGroup.buttons() if b.isChecked()][0]
 
+        # If a password is set, encrypt it using the application key as a generator
         password = self._password.text().strip() if self._password.text().strip() else None
         if password is not None:
             password = REFKEY.encrypt(bytes(password,'utf-8'))
@@ -173,6 +202,3 @@ class SessionDialog(QtWidgets.QDialog):
                                               ('password',password)))
 
         return True, None
-
-
-

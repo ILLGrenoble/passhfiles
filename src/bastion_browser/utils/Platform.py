@@ -3,7 +3,12 @@ import platform
 
 import bastion_browser
 
-def applicationDirectory():
+def applicationSettingsDirectory(create=True):
+    """Returns (and creates if it does not exists) the application settings directory.
+
+    Returns:
+        str: the application settings directory
+    """
 
     system = platform.system()
 
@@ -13,27 +18,52 @@ def applicationDirectory():
         basedir = os.path.join(os.environ['APPDATA'], 'bastion_browser')
     
     # If the application directory does not exist, create it.
-    if not os.path.exists(basedir):
+    if create and not os.path.exists(basedir):
         os.makedirs(basedir)
     
     return basedir
 
 def applicationKeyPath():
+    """Return the path to the application key file.
 
-    return os.path.join(applicationDirectory(),'application_key.yml')
+    Returns:
+        str: the path to the application key file
+    """
 
-def iconsPath():
+    return os.path.join(applicationSettingsDirectory(),'application_key.yml')
 
-    return os.path.join(baseDirectory(),'icons')
+def iconsDirectory():
+    """Returns the path to the icons directory.
+
+    Returns:
+        str: the icons directory path
+    """
+
+    return os.path.join(applicationDirectory(),'icons')
 
 def preferencesPath():
+    """Returns the path to the preferences file.
 
-    return os.path.join(applicationDirectory(),'preferences.yml')
+    Returns:
+        str: the path to the preferences file
+    """
+
+    return os.path.join(applicationSettingsDirectory(),'preferences.yml')
 
 def sessionsDatabasePath():
+    """Returns the path to the sessions file.
 
-    return os.path.join(applicationDirectory(),'sessions.yml')
+    Returns:
+        str: the path to the sessions file
+    """
 
-def baseDirectory():
+    return os.path.join(applicationSettingsDirectory(),'sessions.yml')
+
+def applicationDirectory():
+    """Returns the path to the application base directory.
+
+    Returns:
+        str: the path to the application base directory
+    """
 
     return bastion_browser.__path__[0]
