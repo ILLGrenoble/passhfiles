@@ -134,6 +134,19 @@ class SessionsTreeView(QtWidgets.QTreeView):
             else:
                 sessionsModel.moveSession(selectedIndex, newSessionData)
 
+    def onFindServers(self):
+        """Called when the user clicks on 'Find servers' contextual menu item. This will find automatically 
+        all the servers behind the bastion for a given user.
+        """
+
+        sessionsModel = self.model()
+        sessionIndex = self.currentIndex()
+
+        for i in range(sessionsModel.rowCount(sessionIndex))[::-1]:
+            serverIndex = sessionsModel.index(i,0,sessionIndex)
+            sessionsModel.removeRow(serverIndex,sessionIndex)
+        sessionsModel.findServers(sessionIndex)
+
     def onShowContextualMenu(self, point):
         """Pops up a contextual menu when the user right-clicks on the sessions view.
 
@@ -159,4 +172,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
                 addServerAction = menu.addAction('Add server')
                 addServerAction.triggered.connect(self.onAddServer)
                 menu.addAction(addServerAction)
+                findServersAction = menu.addAction('Find servers')
+                findServersAction.triggered.connect(self.onFindServers)
+                menu.addAction(findServersAction)
                 menu.exec_(QtGui.QCursor.pos())

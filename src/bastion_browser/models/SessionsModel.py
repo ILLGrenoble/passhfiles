@@ -4,6 +4,7 @@ import logging
 import os
 import paramiko
 import socket
+import time
 
 import yaml
 
@@ -107,8 +108,8 @@ class RootNode:
 
         return 0
 
-class SessionNode(object):
-    """Implements a session node root object of the SessionsModel.
+class SessionNode:
+    """Implements a session node of the SessionsModel.
     """
     
     def __init__(self, data, parent):
@@ -123,7 +124,6 @@ class SessionNode(object):
 
         self._children = []
         self._parent = parent
-        self._row = 0
         self._sshSession = None
 
     def addChild(self, child):
@@ -227,13 +227,13 @@ class SessionNode(object):
         """Returns the SSH session.
 
         Returns:
-            paramiko.client.SSHClient: the SSh session. None if not connected.
+            paramiko.client.SSHClient: the SSH session. None if not connected.
         """
 
         return self._sshSession
 
-class ServerNode(object):
-    """Implements a session node root object of the SessionsModel.
+class ServerNode:
+    """Implements a server node of the SessionsModel.
     """
 
     def __init__(self, name, parent):
@@ -416,6 +416,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
         """Clear the model.
         """
 
+        self.layoutAboutToBeChanged.emit()
         self._root.clear()
         self.layoutChanged.emit()
 
@@ -529,6 +530,34 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
         return None
 
+    def findServers(self, sessionIndex):
+        """Find the servers bound to a bastion session and add them to the model.
+
+        Args:
+            sessionIndex (PyQt5.QtCore.QModelIndex): the session index
+        """
+
+        sessionNode = sessionIndex.internalPointer()
+        sshSession = sessionNode.sshSession()
+        if sshSession is None:
+            logging.error('Not connected to bastion server')
+            return
+
+        shell = sshSession.invoke_shell()
+
+        out = ''
+        time.sleep(1)
+
+        while shell.recv_ready():
+            out += shell.recv(2048).decode()
+        out = out.split('\n')[2:-1]
+        servers = [l.split()[1].strip() for l in out]
+
+        for server in servers:
+            sessionNode.addChild(ServerNode(server,sessionNode))
+
+        self.layoutChanged.emit()
+
     def index(self, row, column, parentIndex=QtCore.QModelIndex()):
         """Return the index from a row and a column regarding to a given parent.
 
@@ -611,11 +640,12 @@ class SessionsModel(QtCore.QAbstractItemModel):
             parentIndex (PyQt5.QtCore.QModelIndex): the parent index of the index to remove
         """
 
-        self.beginRemoveRows(parentIndex,index.row(),index.row())
         node = index.internalPointer()
         parentNode = parentIndex.internalPointer()
         if parentNode is None:
             return
+
+        self.beginRemoveRows(parentIndex,index.row(),index.row())
         parentNode.removeChild(node)
         self.endRemoveRows()
 

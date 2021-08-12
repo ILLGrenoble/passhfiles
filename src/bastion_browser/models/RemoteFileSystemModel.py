@@ -1,5 +1,6 @@
 import logging
 import os
+import platform
 import subprocess
 import tempfile
 
@@ -40,9 +41,14 @@ class RemoteFileSystemModel(IFileSystemModel):
             path: the path of the file to be edited
         """
 
-        if not PREFERENCES['editor']:
+        editor = PREFERENCES['editor']
+        if not editor:
             logging.error('No text editor set in the preferences')
-            return
+            if platform.system() == 'Linux':
+                editor = '/usr/bin/xdg-open'
+                logging.info('xdg-open will be used as a replacement')
+            else:
+                return
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
@@ -50,7 +56,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         cmd = scp.SCPClient(sshSession.get_transport())
         cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),path),tempFile, recursive=True)
         try:
-            subprocess.call([PREFERENCES['editor'],tempFile])
+            subprocess.call([editor,tempFile])
         except Exception as e:
             logging.error(str(e))
 

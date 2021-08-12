@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+import platform
 import shutil
 import subprocess
 
@@ -40,12 +41,17 @@ class LocalFileSystemModel(IFileSystemModel):
             path: the path of the file to be edited
         """
 
-        if not PREFERENCES['editor']:
+        editor = PREFERENCES['editor']
+        if not editor:
             logging.error('No text editor set in the preferences')
-            return
+            if platform.system() == 'Linux':
+                editor = 'xdg-open'
+                logging.info('xdg-open will be used as a replacement')
+            else:
+                return
 
         try:
-            subprocess.call([PREFERENCES['editor'],path])
+            subprocess.call([editor,path])
         except Exception as e:
             logging.error(str(e))
 
