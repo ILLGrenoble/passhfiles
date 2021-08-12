@@ -132,7 +132,7 @@ class LocalFileSystemModel(IFileSystemModel):
         self._icons = []
         for (name,isDirectory) in sortedContents:
             absPath = os.path.join(self._currentDirectory,name)
-            size = sizeOf(os.path.getsize(absPath))
+            size = None if isDirectory else sizeOf(os.path.getsize(absPath))
             typ = 'Folder' if isDirectory else 'File'
             modificationTime = str(datetime.fromtimestamp(os.path.getmtime(absPath))).split('.')[0]
             icon = self._directoryIcon if isDirectory else self._fileIcon

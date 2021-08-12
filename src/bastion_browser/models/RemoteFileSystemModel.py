@@ -143,7 +143,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         for c in contents:
             words = [v.strip() for v in c.split()]
             typ = 'Folder' if words[-1].endswith('/') else 'File'
-            size = sizeOf(int(words[4]))
+            size = sizeOf(int(words[4])) if typ == 'Folder' else None
             icon = self._directoryIcon if typ=='Folder' else self._fileIcon
             date = words[5]
             time = words[6].split('.')[0]
