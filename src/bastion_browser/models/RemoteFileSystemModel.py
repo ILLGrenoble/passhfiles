@@ -69,6 +69,27 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         return self._serverIndex.internalPointer().data(0)['remote']
 
+    def getEntries(self,indexes):
+        """Returns the for a set of rows.
+
+        Args:
+            indexes (list of int): the indexes of the entries to fetch
+
+        Returns:
+            list: list of tuples where the 1st element is the full path of the entry, the 2nd element 
+            is a boolean indicating whether the entry is a directory or not and the 3rd element is a 
+            boolean indicatig whether the entry is local or not 
+        """
+
+        entries = []
+
+        for index in indexes:
+            entry = self._entries[index]
+            isDirectory = entry[2] == 'Folder'
+            entries.append((os.path.join(self._currentDirectory,entry[0]),isDirectory,False))
+
+        return entries
+
     def removeEntries(self, selectedRow):
         """Remove some entries of the model.
 
@@ -169,7 +190,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
         progressBar.reset(len(data))
-        for i, (d,_) in enumerate(data):
+        for i, (d,_,_) in enumerate(data):
             cmd = scp.SCPClient(sshSession.get_transport())
             cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
             progressBar.update(i+1)

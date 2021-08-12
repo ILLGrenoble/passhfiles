@@ -122,6 +122,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
 
+    @abc.abstractmethod
     def getEntries(self,indexes):
         """Returns the for a set of rows.
 
@@ -129,18 +130,12 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             indexes (list of int): the indexes of the entries to fetch
 
         Returns:
-            list: list of tuples where the 1st element is the full path of the entry and 2nd element 
-            is a boolean indicating whether the entry is a directory or not
+            list: list of tuples where the 1st element is the full path of the entry, the 2nd element 
+            is a boolean indicating whether the entry is a directory or not and the 3rd element is a 
+            boolean indicatig whether the entry is local or not 
         """
 
-        entries = []
-
-        for index in indexes:
-            entry = self._entries[index]
-            isDirectory = entry[2] == 'Folder'
-            entries.append((os.path.join(self._currentDirectory,entry[0]),isDirectory))
-
-        return entries
+        pass
 
     def headerData(self, section, orientation, role):
         """Return the header data for a given section, orientation and role.

@@ -1,3 +1,6 @@
+from genericpath import isdir
+import os
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
@@ -26,6 +29,14 @@ class FileSystemTableView(QtWidgets.QTableView):
         self.setAcceptDrops(True)
         self.setSortingEnabled(True)
 
+    def dragEnterEvent(self, event):
+        event.accept()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.setDropAction(QtCore.Qt.CopyAction)
+        event.accept()
+
     def dropEvent(self, event):
         """Event triggered when the dragged item is dropped into this widget.
 
@@ -36,10 +47,22 @@ class FileSystemTableView(QtWidgets.QTableView):
         if event.source() == self:
             return
 
-        selectedRows = [index.row() for index in event.source().selectionModel().selectedRows()]
+        # The source is outside the application (e.g. Nautilus file manager)
+        if event.mimeData().hasUrls():
+            event.setDropAction(QtCore.Qt.CopyAction)
+            event.accept()
 
-        selectedData = event.source().model().getEntries(selectedRows)
+            links = []
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    links.append(str(url.toLocalFile()))
+                else:
+                    links.append(str(url.toString()))
 
+            selectedData = [(l,os.path.isdir(l),True) for l in links]
+        else:
+            selectedRows = [index.row() for index in event.source().selectionModel().selectedRows()]
+            selectedData = event.source().model().getEntries(selectedRows)
         self.model().transferData(selectedData)
 
     def keyPressEvent(self, event):
