@@ -1,5 +1,5 @@
-PyQt5
+cryptography
 paramiko
-pyyaml
+PyQt5
+PyYAML
 scp
-
