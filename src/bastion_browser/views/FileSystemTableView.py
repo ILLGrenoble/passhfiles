@@ -24,6 +24,7 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
+        self.setSortingEnabled(True)
 
     def dropEvent(self, event):
         """Event triggered when the dragged item is dropped into this widget.

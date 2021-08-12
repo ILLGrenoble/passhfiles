@@ -74,7 +74,7 @@ class PreferencesDialog(QtWidgets.QDialog):
             errorMessageDialog.exec_()
             return
 
-        setPreferences(self._data, save=True)
+        setPreferences(self._data)
 
         savePreferences(preferencesPath())
 

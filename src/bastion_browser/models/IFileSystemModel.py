@@ -12,7 +12,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
     """Interface for a model of file system.
     """
     
-    sections = ['Name','Size','Type','Date Modified']
+    sections = ['Name','Size','Type','Owner','Date Modified']
 
     addToFavoritesSignal = QtCore.pyqtSignal(str)
 
@@ -58,7 +58,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             int: the number of columns
         """
         
-        return 4
+        return 5
 
     def currentDirectory(self):
         """Returns the curren directory.
@@ -88,7 +88,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         elif role == QtCore.Qt.DecorationRole:
             if col == 0:
-                return self._icons[row]
+                return self._entries[row][-1]
 
         elif role == QtCore.Qt.ToolTipRole:
             return self._currentDirectory
@@ -228,6 +228,17 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
 
         pass
+
+    def sort(self, col, order):
+        """Sort the model.
+
+        Args:
+            col (int): the column
+        """
+
+        self.layoutAboutToBeChanged.emit()
+        self._entries = sorted(self._entries, key=lambda x : x[col],reverse=order)
+        self.layoutChanged.emit()
 
     @abc.abstractmethod
     def transferData(self, data):

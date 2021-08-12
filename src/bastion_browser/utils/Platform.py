@@ -1,5 +1,6 @@
 import os
 import platform
+import pwd
 
 import bastion_browser
 
@@ -67,3 +68,6 @@ def applicationDirectory():
     """
 
     return bastion_browser.__path__[0]
+
+def findOwner(filename):
+    return pwd.getpwuid(os.stat(filename).st_uid).pw_name

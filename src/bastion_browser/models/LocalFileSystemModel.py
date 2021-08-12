@@ -9,6 +9,7 @@ import scp
 from bastion_browser.kernel.Preferences import PREFERENCES
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
+from bastion_browser.utils.Platform import findOwner
 from bastion_browser.utils.ProgressBar import progressBar
 
 class LocalFileSystemModel(IFileSystemModel):
@@ -129,15 +130,14 @@ class LocalFileSystemModel(IFileSystemModel):
         sortedContents += sorted([(c,False) for c in contents if not os.path.isdir(os.path.join(self._currentDirectory,c))])
 
         self._entries = []
-        self._icons = []
         for (name,isDirectory) in sortedContents:
             absPath = os.path.join(self._currentDirectory,name)
             size = None if isDirectory else sizeOf(os.path.getsize(absPath))
             typ = 'Folder' if isDirectory else 'File'
             modificationTime = str(datetime.fromtimestamp(os.path.getmtime(absPath))).split('.')[0]
             icon = self._directoryIcon if isDirectory else self._fileIcon
-            self._entries.append([name,size,typ,modificationTime])
-            self._icons.append(icon)
+            owner = findOwner(absPath)
+            self._entries.append([name,size,typ,owner,modificationTime,icon])
 
         self.layoutChanged.emit()
 

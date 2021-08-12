@@ -139,18 +139,17 @@ class RemoteFileSystemModel(IFileSystemModel):
                 
         contents = contents[2:]
         self._entries = []
-        self._icons = []
         for c in contents:
             words = [v.strip() for v in c.split()]
             typ = 'Folder' if words[-1].endswith('/') else 'File'
             size = sizeOf(int(words[4])) if typ == 'Folder' else None
             icon = self._directoryIcon if typ=='Folder' else self._fileIcon
+            owner = words[2]
             date = words[5]
             time = words[6].split('.')[0]
             modificationTime = '{} {}'.format(date,time)
             name = words[-1][:-1] if typ=='Folder' else words[-1]
-            self._entries.append([name,size,typ,modificationTime])
-            self._icons.append(icon)
+            self._entries.append([name,size,typ,owner,modificationTime,icon])
 
         self.layoutChanged.emit()
 
