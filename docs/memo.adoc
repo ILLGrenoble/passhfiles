@@ -1,0 +1,25 @@
+Install sphinx and theme
+------------------------
+
+_pip install sphinx_
+
+_pip install sphinx_rtd_theme_
+
+Bootstrap sphinx
+----------------
+select separate source and build directories
+This will create a conf.py and also index.rst which is the entry point for ReStructuredText parser. This should be done once
+
+_sphinx-quickstart_
+
+Create the RST files for all the modules of the package
+-------------------------------------------------------
+
+sphinx-apidoc -o source/ ../src/
+
+Build the HTML doc
+------------------
+
+_sphinx-build -b html source/ build_
+
+_make html_

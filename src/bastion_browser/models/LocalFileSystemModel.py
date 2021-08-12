@@ -65,7 +65,7 @@ class LocalFileSystemModel(IFileSystemModel):
         return self._serverIndex.internalPointer().data(0)['local']
 
     def getEntries(self,indexes):
-        """Returns the for a set of rows.
+        """Returns the entries for a set of rows.
 
         Args:
             indexes (list of int): the indexes of the entries to fetch
