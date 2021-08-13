@@ -1,9 +1,10 @@
 @echo off
 
-set bastion_browser_dir=%cd%
-
 rem the path to the python installer executable
-set python_installer=C:\\temp\\python-3.8.6.exe
+set python_installer=%1%
+
+rem the parent to bastion_browser base directory
+set bastion_browser_dir=%2%
 
 rem the directory that will contain the python + deps + bastion_browser
 set target_dir=%bastion_browser_dir%\ci-install

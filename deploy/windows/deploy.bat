@@ -1,8 +1,8 @@
 @echo off
 
-set bastion_browser_dir=%cd%
+set bastion_browser_dir=%1%
 
-set version=%CI_COMMIT_REF_NAME%
+set version=%2%
 
 set target_dir=%bastion_browser_dir%\ci-install
 
