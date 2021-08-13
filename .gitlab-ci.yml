@@ -11,10 +11,10 @@ ci:windows:
   script:
     - call "%CI_PROJECT_DIR%\\deploy\\windows\\build.bat"
   allow_failure: false
-  # artifacts:
-  #   paths:
-  #   - "%CI_PROJECT_DIR%\\deploy\\windows\\build"
-  #   expire_in: 1 hrs
+  artifacts:
+    paths:
+    - "%CI_PROJECT_DIR%\\ci-install"
+    expire_in: 1 hrs
   tags:
     - windows
     - windows7

@@ -4,7 +4,7 @@ set bastion_browser_dir=%cd%
 
 set version=%CI_COMMIT_REF_NAME%
 
-set target_dir=C\\temp\bastion_browser_install
+set target_dir=%bastion_browser_dir%\\ci-install
 
 rem the path to nsis executable
 set makensis="C:\Program Files (x86)\NSIS\Bin\makensis.exe"
