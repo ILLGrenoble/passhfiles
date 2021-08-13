@@ -4,7 +4,7 @@ set bastion_browser_dir=%cd%
 
 set version=%CI_COMMIT_REF_NAME%
 
-set target_dir=%bastion_browser_dir%\\ci-install
+set target_dir=C:\temp\bastion_browser-install
 
 rem copy the LICENSE and CHANGELOG files
 copy %bastion_browser_dir%\LICENSE %bastion_browser_dir%\deploy\windows
