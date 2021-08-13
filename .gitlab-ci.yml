@@ -22,7 +22,7 @@ ci:windows:
 deploy:windows:
   stage: deploy
   script:
-    - call "%CI_PROJECT_DIR%\\BuildServer\\Windows\\deploy.bat"
+    - call "%CI_PROJECT_DIR%\\deploy\\windows\\deploy.bat"
   dependencies:
     - ci:windows
   allow_failure: false
@@ -33,7 +33,7 @@ deploy:windows:
   when: on_success
   artifacts:
     paths:
-     - "%CI_PROJECT_DIR%\\ci-install\\*.exe"
+     - "%CI_PROJECT_DIR%\\ci-install\\bastion_browser-%CI_COMMIT_REF_NAME%-win-amd64.exe"
   tags:
     - windows
     - windows7
