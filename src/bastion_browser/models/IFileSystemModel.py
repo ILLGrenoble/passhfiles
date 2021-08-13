@@ -160,16 +160,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             index (QtCore.QModelIndex): the index of the entry
         """
 
-        row = index.row()
-
-        entry = self._entries[row]
-
-        fullPath = os.path.normpath(os.path.join(self._currentDirectory,entry[0]))
-        if entry[2] == 'Folder':
-            self.setDirectory(fullPath)
-        else:
-            self.editFile(fullPath)
-
+        pass
+    
     @abc.abstractmethod
     def removeEntries(self, path):
         """Remove some entries of the model.

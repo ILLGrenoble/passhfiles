@@ -9,6 +9,7 @@ import scp
 from bastion_browser.kernel.Preferences import PREFERENCES
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
+from bastion_browser.utils.Platform import unixNormPath, unixPathsJoin
 from bastion_browser.utils.ProgressBar import progressBar
 
 class RemoteFileSystemModel(IFileSystemModel):
@@ -22,7 +23,7 @@ class RemoteFileSystemModel(IFileSystemModel):
             directoryName: the name of the directory
         """
 
-        directoryName = os.path.join(self._currentDirectory,directoryName)
+        directoryName = unixPathsJoin(self._currentDirectory,directoryName)
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
@@ -86,9 +87,29 @@ class RemoteFileSystemModel(IFileSystemModel):
         for index in indexes:
             entry = self._entries[index]
             isDirectory = entry[2] == 'Folder'
-            entries.append((os.path.join(self._currentDirectory,entry[0]),isDirectory,False))
+            entries.append((unixPathsJoin(self._currentDirectory,entry[0]),isDirectory,False))
 
         return entries
+
+    def onEnterDirectory(self, index):
+        """Called when the user double clicks on a model's entry. 
+        
+        The entry can be a directory or a file. In case of a folder, the folder will be entered in and in 
+        case of a file, the file will be opened in a text editor.
+
+        Args:
+            index (QtCore.QModelIndex): the index of the entry
+        """
+
+        row = index.row()
+
+        entry = self._entries[row]
+
+        fullPath = unixNormPath(unixPathsJoin(self._currentDirectory,entry[0]))
+        if entry[2] == 'Folder':
+            self.setDirectory(fullPath)
+        else:
+            self.editFile(fullPath)
 
     def removeEntries(self, selectedRow):
         """Remove some entries of the model.
@@ -100,7 +121,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
         for row in selectedRow[::-1]:
-            selectedPath = os.path.join(self._currentDirectory,self._entries[row][0])
+            selectedPath = unixPathsJoin(self._currentDirectory,self._entries[row][0])
             _, _, stderr = sshSession.exec_command('{} rm -rf {}'.format(self._serverIndex.internalPointer().name(), selectedPath))
             error = stderr.read().decode()
             if error:
@@ -128,8 +149,8 @@ class RemoteFileSystemModel(IFileSystemModel):
         
         self._entries[selectedRow][0] = newName
 
-        oldName = os.path.join(self._currentDirectory,oldName)
-        newName = os.path.join(self._currentDirectory,newName)
+        oldName = unixPathsJoin(self._currentDirectory,oldName)
+        newName = unixPathsJoin(self._currentDirectory,newName)
         
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 

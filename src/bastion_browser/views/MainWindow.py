@@ -14,7 +14,7 @@ from bastion_browser.dialogs.PreferencesDialog import PreferencesDialog
 from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
 from bastion_browser.models.RemoteFileSystemModel import RemoteFileSystemModel
-from bastion_browser.utils.Platform import iconsDirectory, preferencesPath, sessionsDatabasePath
+from bastion_browser.utils.Platform import homeDirectory, iconsDirectory, preferencesPath, sessionsDatabasePath
 from bastion_browser.utils.ProgressBar import progressBar
 from bastion_browser.views.FileSystemTableView import FileSystemTableView
 from bastion_browser.views.SessionsTreeView import SessionsTreeView
@@ -217,7 +217,7 @@ class MainWindow(QtWidgets.QMainWindow):
             serverIndex (PyQt5.QtCore.QModelIndex): the index of the server
         """
 
-        localFileSystemModel = LocalFileSystemModel(serverIndex, '.')
+        localFileSystemModel = LocalFileSystemModel(serverIndex, homeDirectory())
         self._sourceFileSystem.setModel(localFileSystemModel)
         self._sourceFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
 

@@ -85,6 +85,26 @@ class LocalFileSystemModel(IFileSystemModel):
 
         return entries
 
+    def onEnterDirectory(self, index):
+        """Called when the user double clicks on a model's entry. 
+        
+        The entry can be a directory or a file. In case of a folder, the folder will be entered in and in 
+        case of a file, the file will be opened in a text editor.
+
+        Args:
+            index (QtCore.QModelIndex): the index of the entry
+        """
+
+        row = index.row()
+
+        entry = self._entries[row]
+
+        fullPath = os.path.normpath(os.path.join(self._currentDirectory,entry[0]))
+        if entry[2] == 'Folder':
+            self.setDirectory(fullPath)
+        else:
+            self.editFile(fullPath)
+
     def removeEntries(self, selectedRows):
         """Remove some entries of the model.
 
