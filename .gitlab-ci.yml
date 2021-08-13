@@ -9,7 +9,7 @@ stages:
 ci:windows:
   stage: ci
   script:
-    - call "%CI_PROJECT_DIR%\\deploy\\windows\\build.bat" C:\\temp\\python-3.8.6.exe %CI_PROJECT_DIR% 
+    - call "%CI_PROJECT_DIR%\\deploy\\windows\\build.bat" "C:\\temp\\python-3.8.6.exe" "%CI_PROJECT_DIR%" 
   allow_failure: false
   artifacts:
     paths:
@@ -22,7 +22,7 @@ ci:windows:
 deploy:windows:
   stage: deploy
   script:
-    - call "%CI_PROJECT_DIR%\\deploy\\windows\\deploy.bat" %CI_PROJECT_DIR% %CI_COMMIT_REF_NAME%
+    - call "%CI_PROJECT_DIR%\\deploy\\windows\\deploy.bat" "%CI_PROJECT_DIR%" "%CI_COMMIT_REF_NAME%"
   dependencies:
     - ci:windows
   allow_failure: false
