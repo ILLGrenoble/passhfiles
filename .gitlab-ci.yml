@@ -13,7 +13,7 @@ ci:windows:
   allow_failure: false
   artifacts:
     paths:
-    - "C:\\temp\\bastion_browser-install"
+    - "%CI_PROJECT_DIR%\\ci-install"
     expire_in: 1 hrs
   tags:
     - windows
@@ -33,7 +33,7 @@ deploy:windows:
   when: on_success
   artifacts:
     paths:
-     - "C:\\temp\\bastion_browser-install\\bastion_browser-%CI_COMMIT_REF_NAME%-win-amd64.exe"
+     - "%CI_PROJECT_DIR%\\ci-install\\bastion_browser-%CI_COMMIT_REF_NAME%-win-amd64.exe"
   tags:
     - windows
     - windows7
