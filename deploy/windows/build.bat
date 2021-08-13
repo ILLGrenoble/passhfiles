@@ -18,7 +18,7 @@ rem create the target directory that will contains the python installation
 mkdir %target_dir%
 
 rem install python to the select target directory
-%python_installer% /quiet TargetDir=%target_dir%
+%python_installer% /quiet TargetDir=%target_dir% Include_test=0
 
 rem the path to pip executable
 set pip_exe=%target_dir%\Scripts\pip.exe
