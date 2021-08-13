@@ -33,7 +33,7 @@ deploy:windows:
   when: on_success
   artifacts:
     paths:
-     - "C:\\temp\bastion_browser_install\\*.exe"
+     - "%CI_PROJECT_DIR%\\ci-install\\*.exe"
   tags:
     - windows
     - windows7
