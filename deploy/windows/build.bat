@@ -8,6 +8,9 @@ set python_installer=C:\\temp\\python-3.8.6.exe
 rem the directory that will contain the python + deps + bastion_browser
 set target_dir=%bastion_browser_dir%\ci-install
 
+rem repair before python
+%python_installer% /quiet /repair /passive
+
 rem uninstall python
 %python_installer% /quiet /uninstall
 
