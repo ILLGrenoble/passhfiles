@@ -6,6 +6,10 @@ set version=%CI_COMMIT_REF_NAME%
 
 set target_dir=%bastion_browser_dir%\\ci-install
 
+rem copy the LICENSE and CHANGELOG files
+copy %bastion_browser_dir%\LICENSE %bastion_browser_dir%\deploy\windows
+copy %bastion_browser_dir%\CHANGELOG.md %bastion_browser_dir%\deploy\windows\CHANGELOG.txt
+
 rem the path to nsis executable
 set makensis="C:\Program Files (x86)\NSIS\Bin\makensis.exe"
 set nsis_installer=%bastion_browser_dir%\deploy\windows\installer.nsi

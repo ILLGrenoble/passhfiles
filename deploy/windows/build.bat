@@ -32,7 +32,3 @@ set python_exe=%target_dir%\python.exe
 rem build and install bastion_browser using the python installed in the target directory
 rmdir /S /Q %bastion_browser_dir%\build
 %python_exe% setup.py build install
-
-rem copy the LICENSE and CHANGELOG files
-copy %bastion_browser_dir%\LICENSE %bastion_browser_dir%\deploy\windows
-copy %bastion_browser_dir%\CHANGELOG.md %bastion_browser_dir%\deploy\windows\CHANGELOG.txt
