@@ -1,4 +1,4 @@
-@echo off
+@echo on
 
 rem the path to the python installer executable
 set python_installer=%1%
