@@ -1,4 +1,4 @@
-@echo off
+@echo on
 
 set bastion_browser_dir=%cd%
 
