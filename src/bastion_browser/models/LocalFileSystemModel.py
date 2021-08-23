@@ -174,7 +174,7 @@ class LocalFileSystemModel(IFileSystemModel):
 
         self._currentDirectory = directory
 
-        # Sort the contents of the directory (.. first, then the sorted directories and finally the sorted files)
+        # Sort the contents of the directory (first the sorted directories and then the sorted files)
         sortedContents = sorted([(c,True) for c in contents if os.path.isdir(os.path.join(self._currentDirectory,c))])
         sortedContents += sorted([(c,False) for c in contents if not os.path.isdir(os.path.join(self._currentDirectory,c))])
 
