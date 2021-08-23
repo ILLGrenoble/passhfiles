@@ -15,7 +15,7 @@ class SessionDialog(QtWidgets.QDialog):
                    'user':'passhport',
                    'port':22,
                    'key':'',
-                   'keytype': 'ECDSA',
+                   'keytype': 'ED25519',
                    'password':''}
 
     def __init__(self, parent, newSession, data=None):

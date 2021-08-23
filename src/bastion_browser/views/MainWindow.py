@@ -88,21 +88,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
         newSessionAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'new_session.png')), 'New session', self)
         newSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
+        newSessionAction.setToolTip('Setup a new SSH session')
 
         saveSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'save_sessions.png')), 'Save session(s)', self)
         saveSessionsAction.triggered.connect(self.onSaveSessions)
+        saveSessionsAction.setToolTip('Save the current session(s)')
 
         clearSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'clear_sessions.png')), 'Clear session(s)', self)
         clearSessionsAction.triggered.connect(self.onClearSessions)
+        clearSessionsAction.setToolTip('Clear the current session(s)')
 
         restoreSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'restore_sessions.png')), 'Restore session(s)', self)
         restoreSessionsAction.triggered.connect(self.onLoadSessions)
+        restoreSessionsAction.setToolTip('Restore the session(s)')
 
         preferencesAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'preferences.png')), 'Settings', self)
         preferencesAction.triggered.connect(self.onSetPreferences)
+        preferencesAction.setToolTip('Setup the preferences')
 
         exitAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'exit.png')), 'Exit application', self)
         exitAction.triggered.connect(self.onQuitApplication)
+        exitAction.setToolTip('Exit')
 
         self.toolbar = self.addToolBar('Toolbar')
         self.toolbar.addAction(newSessionAction)
