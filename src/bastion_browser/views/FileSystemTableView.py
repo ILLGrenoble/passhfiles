@@ -145,7 +145,6 @@ class FileSystemTableView(QtWidgets.QTableView):
         if self.model() is None:
             return
 
-        print(path)
         self.model().setDirectory(path)
 
     def onRenameEntry(self, selectedRow):
