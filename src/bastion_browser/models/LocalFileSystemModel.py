@@ -169,14 +169,16 @@ class LocalFileSystemModel(IFileSystemModel):
             logging.error(str(e))
             return
 
+        if not self._showHiddenFiles:
+            contents = [c for c in contents if not c.startswith('.')]
+
         self._currentDirectory = directory
 
         # Sort the contents of the directory (.. first, then the sorted directories and finally the sorted files)
-        sortedContents = [('..',True)]
-        sortedContents += sorted([(c,True) for c in contents if os.path.isdir(os.path.join(self._currentDirectory,c))])
+        sortedContents = sorted([(c,True) for c in contents if os.path.isdir(os.path.join(self._currentDirectory,c))])
         sortedContents += sorted([(c,False) for c in contents if not os.path.isdir(os.path.join(self._currentDirectory,c))])
 
-        self._entries = []
+        self._entries = [['..',None,'Folder',None,None,self._directoryIcon]]
         for (name,isDirectory) in sortedContents:
             absPath = os.path.join(self._currentDirectory,name)
             size = None if isDirectory else sizeOf(os.path.getsize(absPath))

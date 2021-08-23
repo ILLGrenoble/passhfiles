@@ -175,22 +175,28 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
-        _, stdout, stderr = sshSession.exec_command('{} ls --group-directories --full-time -alpL {}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory))
+        char = 'a' if self._showHiddenFiles else ''
+
+        _, stdout, stderr = sshSession.exec_command('{} ls --group-directories --full-time -{}lpL {}'.format(self._serverIndex.internalPointer().name(),char,self._currentDirectory))
         error = stderr.read().decode()
         if error:
             logging.error(error)
             return
         
+        self._entries = [['..',None,'Folder',None,None,self._directoryIcon]]
         contents = [l.strip() for l in stdout.readlines()]
-        if len(contents) == 1:
-            return
-                
-        contents = contents[2:]
-        self._entries = []
+
+        # The 1st elements of contents is always the total count of entries output by the ls command. It is not used.
+        # For ls -a command the 2nd and 3rd entries are for . and .. directories. It is not used.
+        if self._showHiddenFiles:
+            contents = contents[3:] if len(contents) >= 4 else []
+        else:
+            contents = contents[1:] if len(contents) >= 2 else []
+
         for c in contents:
             words = [v.strip() for v in c.split()]
             typ = 'Folder' if words[-1].endswith('/') else 'File'
-            size = sizeOf(int(words[4])) if typ == 'Folder' else None
+            size = sizeOf(int(words[4])) if typ == 'File' else None
             icon = self._directoryIcon if typ=='Folder' else self._fileIcon
             owner = words[2]
             date = words[5]

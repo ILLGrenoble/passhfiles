@@ -33,6 +33,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self._serverIndex = serverIndex
 
+        self._showHiddenFiles = True
+
         self.setDirectory(startingDirectory)
 
     def addToFavorites(self):
@@ -215,6 +217,14 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
 
         pass
+
+    def showHiddenFiles(self, show):
+        """Show or hide the hidden files. 
+        """
+
+        self._showHiddenFiles = show
+
+        self.setDirectory(self._currentDirectory)
 
     def sort(self, col, order):
         """Sort the model.
