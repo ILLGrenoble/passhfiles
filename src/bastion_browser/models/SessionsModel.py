@@ -416,9 +416,9 @@ class SessionsModel(QtCore.QAbstractItemModel):
         """Clear the model.
         """
 
-        self.layoutAboutToBeChanged.emit()
+        self.beginResetModel()
         self._root.clear()
-        self.layoutChanged.emit()
+        self.endResetModel()
 
     def columnCount(self, index):
         """Return the column count of the model for a given index.
