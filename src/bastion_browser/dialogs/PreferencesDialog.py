@@ -41,20 +41,20 @@ class PreferencesDialog(QtWidgets.QDialog):
         self._button_box.accepted.connect(self.accept)
         self._button_box.rejected.connect(self.reject)
 
-        main_layout = QtWidgets.QVBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
 
-        form_layout = QtWidgets.QFormLayout()
+        formLayout = QtWidgets.QFormLayout()
 
-        form_layout.addRow(QtWidgets.QLabel('Text editor'),keyHLayout)
-        form_layout.addRow(QtWidgets.QLabel('Auto connect at start up'),self._autoConnect)
+        formLayout.addRow(QtWidgets.QLabel('Text editor'),keyHLayout)
+        formLayout.addRow(QtWidgets.QLabel('Auto connect at start up'),self._autoConnect)
 
-        main_layout.addLayout(form_layout)
+        mainLayout.addLayout(formLayout)
 
-        main_layout.addWidget(self._button_box)
+        mainLayout.addWidget(self._button_box)
 
         self.setGeometry(0, 0, 600, 150)
 
-        self.setLayout(main_layout)
+        self.setLayout(mainLayout)
 
         self._browseEditor.clicked.connect(self.onBrowseEditor)
 

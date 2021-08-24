@@ -89,29 +89,29 @@ class SessionDialog(QtWidgets.QDialog):
         else:
             self._password.setText(password)
 
-        self._button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        self._button_box.accepted.connect(self.accept)
-        self._button_box.rejected.connect(self.reject)
+        self._buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self._buttonBox.accepted.connect(self.accept)
+        self._buttonBox.rejected.connect(self.reject)
 
-        main_layout = QtWidgets.QVBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
 
-        form_layout = QtWidgets.QFormLayout()
+        formLayout = QtWidgets.QFormLayout()
 
-        form_layout.addRow(QtWidgets.QLabel('Session Name'),self._name)
-        form_layout.addRow(QtWidgets.QLabel('Address/IP'),self._address)
-        form_layout.addRow(QtWidgets.QLabel('User'),self._user)
-        form_layout.addRow(QtWidgets.QLabel('Port'),self._port)
-        form_layout.addRow(QtWidgets.QLabel('Private key'),keyHLayout)
-        form_layout.addRow(QtWidgets.QLabel('Key type'),keyTypeLayout)
-        form_layout.addRow(QtWidgets.QLabel('Password'),self._password)
+        formLayout.addRow(QtWidgets.QLabel('Session Name'),self._name)
+        formLayout.addRow(QtWidgets.QLabel('Address/IP'),self._address)
+        formLayout.addRow(QtWidgets.QLabel('User'),self._user)
+        formLayout.addRow(QtWidgets.QLabel('Port'),self._port)
+        formLayout.addRow(QtWidgets.QLabel('Private key'),keyHLayout)
+        formLayout.addRow(QtWidgets.QLabel('Key type'),keyTypeLayout)
+        formLayout.addRow(QtWidgets.QLabel('Password'),self._password)
 
-        main_layout.addLayout(form_layout)
+        mainLayout.addLayout(formLayout)
 
-        main_layout.addWidget(self._button_box)
+        mainLayout.addWidget(self._buttonBox)
 
         self.setGeometry(0, 0, 600, 250)
 
-        self.setLayout(main_layout)
+        self.setLayout(mainLayout)
 
         self._browseKey.clicked.connect(self.onBrowsePrivateKey)
 

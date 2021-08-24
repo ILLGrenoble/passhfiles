@@ -9,7 +9,7 @@ import yaml
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import bastion_browser
+from bastion_browser.dialogs.AboutDialog import AboutDialog
 from bastion_browser.dialogs.PreferencesDialog import PreferencesDialog
 from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
@@ -81,6 +81,14 @@ class MainWindow(QtWidgets.QMainWindow):
         exitAction.setStatusTip('Exit')
         exitAction.triggered.connect(self.onQuitApplication)
         fileMenu.addAction(exitAction)
+
+        helpMenu = menubar.addMenu('&Help')
+
+        aboutAction = QtWidgets.QAction('About',self)
+        aboutAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'about.png')))
+        aboutAction.triggered.connect(self.onLaunchAboutDialog)
+
+        helpMenu.addAction(aboutAction)
 
     def _createFileSystemWidget(self, layout):
         """Create a file system widget.
@@ -202,6 +210,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         sessionsModel = self._sessionsTreeView.model()
         sessionsModel.clear()
+
+    def onLaunchAboutDialog(self):
+        """Pops up the information dialog about the application.
+        """
+
+        dialog = AboutDialog(self)
+        dialog.exec_()
 
     def onLoadSessions(self):
         """Load the sessions.
