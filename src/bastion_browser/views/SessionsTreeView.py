@@ -83,7 +83,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
             sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onAddSession(self):
-        """Called when the user click on 'Add session' contextual menu item. Adds a new session to the underlying model.
+        """Called when the user clicks on 'Add session' contextual menu item. Adds a new session to the underlying model.
         """
 
         sessionDialog = SessionDialog(self,True)
@@ -93,9 +93,12 @@ class SessionsTreeView(QtWidgets.QTreeView):
             sessionsModel = self.model()
             sessionsModel.addSession(sessionData)
             sessionsModel.saveSessions(sessionsDatabasePath())
+            lastIndex = sessionsModel.index(sessionsModel.rowCount()-1,0)
+            sessionsModel.connect(lastIndex)
+            sessionsModel.findServers(lastIndex)
 
     def onBrowseFiles(self):
-        """Caled when the left-click on a server node. Opens the local and remote file browsers.
+        """Caled when the left-clicks on a server node. Opens the local and remote file browsers.
         """
 
         currentIndex = self.currentIndex()
