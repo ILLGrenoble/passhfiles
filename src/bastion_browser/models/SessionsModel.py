@@ -434,6 +434,9 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
     def connect(self, sessionIndex):
         """Connect a given session.
+
+        Args:
+            sessionIndex (PyQt5.QtCore.QModelIndex): the index of the session
         """
 
         sessionNode = sessionIndex.internalPointer()
@@ -449,7 +452,11 @@ class SessionsModel(QtCore.QAbstractItemModel):
             logging.error('Unknown key type')
             return
 
-        password = REFKEY.decrypt(data['password']).decode() if data['password'] is not None else None
+        try:
+            password = REFKEY.decrypt(data['password']).decode() if data['password'] is not None else None
+        except Exception as e:
+            logging.error('Could not decrypt SSH key password')
+            return
 
         try:
             f = open(data['key'],'r')

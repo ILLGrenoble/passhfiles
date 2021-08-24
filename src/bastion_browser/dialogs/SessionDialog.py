@@ -82,9 +82,12 @@ class SessionDialog(QtWidgets.QDialog):
         self._password = QtWidgets.QLineEdit()
         self._password.setEchoMode(QtWidgets.QLineEdit.Password)
 
-        password = REFKEY.decrypt(self._data['password']).decode() if self._data['password'] else ''
-        self._password.setText(password)
-
+        try:
+            password = REFKEY.decrypt(self._data['password']).decode() if self._data['password'] else ''
+        except Exception as e:
+            pass
+        else:
+            self._password.setText(password)
 
         self._button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self._button_box.accepted.connect(self.accept)
