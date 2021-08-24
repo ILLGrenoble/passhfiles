@@ -76,6 +76,34 @@ class MainWindow(QtWidgets.QMainWindow):
         exitAction.triggered.connect(self.onQuitApplication)
         fileMenu.addAction(exitAction)
 
+    def _createFileSystemWidget(self, layout):
+        """Create a file system widget.
+
+        Args:
+            layout (QtWidgets.QLayout): the layout
+        """
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+
+        return widget
+
+    def _createFileSystemLayout(self, label, tableView):
+        """Create a file system layout.
+
+        The layout is made of a Qlabel on top of a table view.
+
+        Args:
+            label (str): the label for the layout
+            tableView (bastion_browser.views.FileSystemTableView): the table view
+        """
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(QtWidgets.QLabel(label))
+        layout.addWidget(tableView)
+
+        return layout
+
     def _initUi(self):
         """Setup the main window.
         """
@@ -89,16 +117,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().addPermanentWidget(self._progressBar)
 
         self._sourceFileSystem = FileSystemTableView()
-
         self._targetFileSystem = FileSystemTableView()
+        
+        sourceFileSystemWidget = self._createFileSystemWidget(self._createFileSystemLayout('Local filesystem',self._sourceFileSystem))
+        targetFileSystemWidget = self._createFileSystemWidget(self._createFileSystemLayout('Remote filesystem',self._targetFileSystem))
+
+        leftPanelWidget = QtWidgets.QWidget()
+        leftPaneLayout = QtWidgets.QVBoxLayout()
+        leftPaneLayout.addWidget(QtWidgets.QLabel('SSH sessions'))
+        leftPaneLayout.addWidget(self._sessionsTreeView)
+        leftPanelWidget.setLayout(leftPaneLayout)
 
         self._splitter = QtWidgets.QSplitter()
-        self._splitter.addWidget(self._sourceFileSystem)
-        self._splitter.addWidget(self._targetFileSystem)
-
-        hlayout = QtWidgets.QHBoxLayout()
-        hlayout.addWidget(self._sessionsTreeView)
-        hlayout.addWidget(self._splitter, stretch=2)
+        self._splitter.addWidget(leftPanelWidget)
+        self._splitter.addWidget(sourceFileSystemWidget)
+        self._splitter.addWidget(targetFileSystemWidget)
+        self._splitter.setStretchFactor(0,1)
+        self._splitter.setStretchFactor(1,2)
+        self._splitter.setStretchFactor(2,2)
 
         logger = LoggerWidget(self)
         logger.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -109,7 +145,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mainLayout = QtWidgets.QVBoxLayout()
 
-        mainLayout.addLayout(hlayout, stretch=4)
+        mainLayout.addWidget(self._splitter, stretch=4)
         mainLayout.addWidget(logger.widget, stretch=1)
 
         self.setGeometry(0, 0, 1400, 800)
