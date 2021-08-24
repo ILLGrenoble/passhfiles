@@ -411,6 +411,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
         serverNode = serverIndex.internalPointer()
         serverNode.addFavorite(fileSystemType,currentDirectory)
+        self.saveSessions(sessionsDatabasePath())
 
     def clear(self):
         """Clear the model.
