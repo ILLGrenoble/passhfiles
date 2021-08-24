@@ -9,6 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser.dialogs.SessionDialog import SessionDialog
 from bastion_browser.models.SessionsModel import ServerNode, SessionNode, SessionsModel
+from bastion_browser.utils.Platform import sessionsDatabasePath
 
 class SessionsTreeView(QtWidgets.QTreeView):
     """Implements a view for the loaded SSH sessions. The view is implemented a tree view.
@@ -47,6 +48,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
             selectedIndex = self.currentIndex()
             sessionsModel = self.model()
             sessionsModel.removeRow(selectedIndex,selectedIndex.parent())
+            sessionsModel.saveSessions(sessionsDatabasePath())
             
         return super(SessionsTreeView,self).keyPressEvent(event)
 
@@ -78,6 +80,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
             sessionIndex = self.currentIndex()
             sessionsModel = self.model()
             sessionsModel.addServer(text.strip(),sessionIndex.internalPointer())
+            sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onAddSession(self):
         """Called when the user click on 'Add session' contextual menu item. Adds a new session to the underlying model.
@@ -89,6 +92,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
             sessionData = sessionDialog.data()
             sessionsModel = self.model()
             sessionsModel.addSession(sessionData)
+            sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onBrowseFiles(self):
         """Caled when the left-click on a server node. Opens the local and remote file browsers.
@@ -116,8 +120,21 @@ class SessionsTreeView(QtWidgets.QTreeView):
         sessionsModel = self.model()
         sessionsModel.connect(sessionIndex)
 
+    def onDeleteSession(self):
+        """Called when the user clicks on 'Delete' contextual menu item.
+        Delete the selected session.
+        """
+
+        sessionsModel = self.model()
+
+        selectedIndex = self.currentIndex()
+
+        sessionsModel.removeRow(selectedIndex,selectedIndex.parent())
+
+        sessionsModel.saveSessions(sessionsDatabasePath())
+
     def onEditSession(self):
-        """Called when the user click on 'Edit' contextual menu item. 
+        """Called when the user clicks on 'Edit' contextual menu item. 
         Edit the selected session.
         """
 
@@ -133,6 +150,8 @@ class SessionsTreeView(QtWidgets.QTreeView):
                 sessionsModel.updateSession(selectedIndex, newSessionData)
             else:
                 sessionsModel.moveSession(selectedIndex, newSessionData)
+
+            sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onFindServers(self):
         """Called when the user clicks on 'Find servers' contextual menu item. This will find automatically 
@@ -166,6 +185,8 @@ class SessionsTreeView(QtWidgets.QTreeView):
             if isinstance(selectedItems[0].internalPointer(),SessionNode):
                 editAction = menu.addAction('Edit')
                 editAction.triggered.connect(self.onEditSession)
+                deleteAction = menu.addAction('Delete')
+                deleteAction.triggered.connect(self.onDeleteSession)
                 connectAction = menu.addAction('Connect')
                 connectAction.triggered.connect(self.onConnect)
                 menu.addAction(connectAction)

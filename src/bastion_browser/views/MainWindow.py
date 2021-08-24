@@ -48,28 +48,21 @@ class MainWindow(QtWidgets.QMainWindow):
         fileMenu = menubar.addMenu('&Session')
 
         addSessionAction = QtWidgets.QAction('&Add Session', self)
+        addSessionAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'new_session.png')))
         addSessionAction.setStatusTip('Open ssh session dialog')
         addSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
         fileMenu.addAction(addSessionAction)
 
         saveSessionsAction = QtWidgets.QAction('&Save Session(s)', self)
+        saveSessionsAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'save_sessions.png')))
         saveSessionsAction.setStatusTip('Save current sessions')
         saveSessionsAction.triggered.connect(self.onSaveSessions)
         fileMenu.addAction(saveSessionsAction)
 
-        clearSessionsAction = QtWidgets.QAction('&Clear Session(s)', self)
-        clearSessionsAction.setStatusTip('Clear all sessions')
-        clearSessionsAction.triggered.connect(self.onClearSessions)
-        fileMenu.addAction(clearSessionsAction)
-
-        restoreSessionsAction = QtWidgets.QAction('&Restore Session(s)', self)
-        restoreSessionsAction.setStatusTip('Restore sessions')
-        restoreSessionsAction.triggered.connect(self.onLoadSessions)
-        fileMenu.addAction(restoreSessionsAction)
-
         fileMenu.addSeparator()
 
         preferencesAction = QtWidgets.QAction('&Preferences', self)
+        preferencesAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'preferences.png')))
         preferencesAction.setStatusTip('Open preferences settings')
         preferencesAction.triggered.connect(self.onSetPreferences)
         fileMenu.addAction(preferencesAction)
@@ -77,46 +70,11 @@ class MainWindow(QtWidgets.QMainWindow):
         fileMenu.addSeparator()
 
         exitAction = QtWidgets.QAction('&Exit', self)
+        exitAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'exit.png')))
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit')
         exitAction.triggered.connect(self.onQuitApplication)
         fileMenu.addAction(exitAction)
-
-    def _buildToolBars(self):
-        """Build the toolbar.
-        """
-
-        newSessionAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'new_session.png')), 'New session', self)
-        newSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
-        newSessionAction.setToolTip('Setup a new SSH session')
-
-        saveSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'save_sessions.png')), 'Save session(s)', self)
-        saveSessionsAction.triggered.connect(self.onSaveSessions)
-        saveSessionsAction.setToolTip('Save the current session(s)')
-
-        clearSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'clear_sessions.png')), 'Clear session(s)', self)
-        clearSessionsAction.triggered.connect(self.onClearSessions)
-        clearSessionsAction.setToolTip('Clear the current session(s)')
-
-        restoreSessionsAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'restore_sessions.png')), 'Restore session(s)', self)
-        restoreSessionsAction.triggered.connect(self.onLoadSessions)
-        restoreSessionsAction.setToolTip('Restore the session(s)')
-
-        preferencesAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'preferences.png')), 'Settings', self)
-        preferencesAction.triggered.connect(self.onSetPreferences)
-        preferencesAction.setToolTip('Setup the preferences')
-
-        exitAction = QtWidgets.QAction(QtGui.QIcon(os.path.join(iconsDirectory(),'exit.png')), 'Exit application', self)
-        exitAction.triggered.connect(self.onQuitApplication)
-        exitAction.setToolTip('Exit')
-
-        self.toolbar = self.addToolBar('Toolbar')
-        self.toolbar.addAction(newSessionAction)
-        self.toolbar.addAction(saveSessionsAction)
-        self.toolbar.addAction(clearSessionsAction)
-        self.toolbar.addAction(restoreSessionsAction)
-        self.toolbar.addAction(preferencesAction)
-        self.toolbar.addAction(exitAction)
 
     def _initUi(self):
         """Setup the main window.
@@ -158,7 +116,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._mainFrame.setLayout(mainLayout)
 
-        self._buildToolBars()
         self._buildMenu()
 
         iconPath = os.path.join(iconsDirectory(), 'bastion_browser.png')

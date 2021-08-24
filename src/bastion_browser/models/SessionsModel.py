@@ -11,7 +11,7 @@ import yaml
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser import REFKEY
-from bastion_browser.utils.Platform import iconsDirectory
+from bastion_browser.utils.Platform import iconsDirectory, sessionsDatabasePath
 
 class RootNode:
     """Implements the root object of the SessionsModel.
@@ -604,7 +604,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
         for session in sessions:
             self.addSession(session)
 
-        logging.info('Sessions successfully loaded')
+        logging.info('Sessions successfully loaded from {}'.format(sessionsFile))
 
     def moveSession(self, sessionIndex, newSessionData):
         """Move a session to another one.
@@ -696,8 +696,8 @@ class SessionsModel(QtCore.QAbstractItemModel):
         except Exception as e:
             logging.error(str(e))
             return
-
-        logging.info('Sessions saved to {}'.format(sessionsFile))
+        else:
+            logging.info('Session successfully saved to {}'.format(sessionsFile))
         
     def updateSession(self, sessionIndex, newSessionData):
         """Update a given session with new data.
