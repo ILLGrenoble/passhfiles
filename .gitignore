@@ -5,3 +5,6 @@ __pycache__
 *.html
 *lock*
 .eggs
+AppDir
+appimage-builder-cache
+bastion_browser*AppImage*
