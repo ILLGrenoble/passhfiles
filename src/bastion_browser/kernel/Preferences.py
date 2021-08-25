@@ -5,7 +5,6 @@ import yaml
 
 PREFERENCES = collections.OrderedDict()
 PREFERENCES['editor'] = ''
-PREFERENCES['auto-connect'] = True
 
 def setPreferences(preferences):
     """Set the preferences.

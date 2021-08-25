@@ -76,10 +76,8 @@ class SessionDialog(QtWidgets.QDialog):
         self._keytypesRadioBUttons['ED25519'] = QtWidgets.QRadioButton('ED25519')
         self._radioButtonGroup.addButton(self._keytypesRadioBUttons['ED25519'])
         self._radioButtonGroup.setExclusive(True)
-        for b in self._radioButtonGroup.buttons():
-            if b.text() == self._data['keytype']:
-                b.setChecked(True)
-                break
+        if self._data['keytype'] in self._keytypesRadioBUttons:
+            self._keytypesRadioBUttons[self._data['keytype']].setChecked(True)
         keyTypeLayout.addWidget(self._keytypesRadioBUttons['RSA'])
         keyTypeLayout.addWidget(self._keytypesRadioBUttons['ECDSA'])
         keyTypeLayout.addWidget(self._keytypesRadioBUttons['ED25519'])

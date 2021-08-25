@@ -34,9 +34,6 @@ class PreferencesDialog(QtWidgets.QDialog):
         keyHLayout.addWidget(self._editor, stretch=2)
         keyHLayout.addWidget(self._browseEditor,stretch=0)
 
-        self._autoConnect = QtWidgets.QCheckBox()
-        self._autoConnect.setChecked(PREFERENCES['auto-connect'])
-
         self._button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self._button_box.accepted.connect(self.accept)
         self._button_box.rejected.connect(self.reject)
@@ -46,7 +43,6 @@ class PreferencesDialog(QtWidgets.QDialog):
         formLayout = QtWidgets.QFormLayout()
 
         formLayout.addRow(QtWidgets.QLabel('Text editor'),keyHLayout)
-        formLayout.addRow(QtWidgets.QLabel('Auto connect at start up'),self._autoConnect)
 
         mainLayout.addLayout(formLayout)
 
@@ -117,7 +113,6 @@ class PreferencesDialog(QtWidgets.QDialog):
         if editor and not os.path.exists(editor):
             return False, 'The path to text editor does not exist'
 
-        self._data = collections.OrderedDict((('editor',editor),
-                                              ('auto-connect',self._autoConnect.isChecked())))
+        self._data = collections.OrderedDict((('editor',editor)))
 
         return True, None

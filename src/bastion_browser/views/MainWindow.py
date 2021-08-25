@@ -39,12 +39,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.loadPreferencesFile()
 
-        if PREFERENCES['auto-connect']:
-            sessionsModel = self._sessionsTreeView.model()
-            sessionIndexes = [sessionsModel.index(i,0) for i in range(sessionsModel.rowCount())]
-            for index in sessionIndexes:
-                sessionsModel.connect(index)
-
     def _buildMenu(self):
         """Build the menu.
         """
