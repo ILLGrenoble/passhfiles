@@ -1,4 +1,5 @@
 import collections
+import logging
 import os
 import platform
 import re
@@ -181,12 +182,13 @@ class SessionDialog(QtWidgets.QDialog):
             output, err = p.communicate()
             rc = p.returncode
             if rc != 0:
-                raise
+                raise IOError(err.decode())
             keytype = re.search('\((.*)\)',output.decode()).group(1)
             if keytype not in self._keytypesRadioBUttons:
-                raise
+                raise KeyError('Unknown key type')
             self._keytypesRadioBUttons[keytype].setChecked(True)
-        except:
+        except Exception as e:
+            logging.error(str(e))
             return
 
     def validate(self):
