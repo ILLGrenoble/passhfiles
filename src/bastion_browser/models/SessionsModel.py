@@ -12,6 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser import REFKEY
 from bastion_browser.utils.Platform import iconsDirectory, sessionsDatabasePath
+from bastion_browser.utils.Security import checkAndGetSSHKey
 
 class RootNode:
     """Implements the root object of the SessionsModel.
@@ -432,7 +433,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
             return self._root.columnCount()
         return index.internalPointer().columnCount()
 
-    def connect(self, sessionIndex):
+    def connect(self, sessionIndex, key=None):
         """Connect a given session.
 
         Args:
@@ -440,33 +441,11 @@ class SessionsModel(QtCore.QAbstractItemModel):
         """
 
         sessionNode = sessionIndex.internalPointer()
+
+        if sessionNode.sshSession() is not None:
+            return
+
         data = sessionNode.data(0)
-
-        if data['keytype'] == 'RSA':
-            paramikoKeyModule = paramiko.RSAKey
-        elif data['keytype'] == 'ECDSA':
-            paramikoKeyModule = paramiko.ECDSAKey
-        elif data['keytype'] == 'ED25519':
-            paramikoKeyModule = paramiko.Ed25519Key
-        else:
-            logging.error('Unknown key type')
-            return
-
-        try:
-            password = REFKEY.decrypt(data['password']).decode() if data['password'] is not None else None
-        except Exception as e:
-            logging.error('Could not decrypt SSH key password')
-            return
-
-        try:
-            f = open(data['key'],'r')
-            s = f.read()
-            f.close()
-            keyfile = io.StringIO(s)
-            key = paramikoKeyModule.from_private_key(keyfile,password=password)
-        except Exception as e:
-            logging.error(str(e))
-            return
 
         sshSession = paramiko.SSHClient()
         sshSession.set_missing_host_key_policy(paramiko.AutoAddPolicy())

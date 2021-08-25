@@ -8,8 +8,10 @@ import paramiko
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser.dialogs.SessionDialog import SessionDialog
+from bastion_browser.kernel.KeyStore import KEYSTORE
 from bastion_browser.models.SessionsModel import ServerNode, SessionNode, SessionsModel
 from bastion_browser.utils.Platform import sessionsDatabasePath
+from bastion_browser.utils.Security import checkAndGetSSHKey
 
 class SessionsTreeView(QtWidgets.QTreeView):
     """Implements a view for the loaded SSH sessions. The view is implemented a tree view.
@@ -68,11 +70,40 @@ class SessionsTreeView(QtWidgets.QTreeView):
 
         super(SessionsTreeView,self).mousePressEvent(event)
 
+        # Case where the user clicks in the view but not on an item or if the user clicks on a selected item --> deselect the currently selected item
         if ((index.row() == -1 and index.column() == -1) or selected):
             self.clearSelection()
+            return
+
+        sessionsModel = self.model()
+
+        node = index.internalPointer()
+        if isinstance(node,SessionNode):
+            sessionData = node.data(0)
+            keyfile = sessionData['key']
+            keytype = sessionData['keytype']
+            if not KEYSTORE.hasKey(keyfile):
+                password, ok = QtWidgets.QInputDialog.getText(self, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
+                if not ok:
+                    return                
+                
+                success,key = checkAndGetSSHKey(keyfile,keytype,password)
+                if not success:
+                    logging.error('Invalid password for unlocking {} key'.format(keyfile))
+                    return
+                else:
+                    KEYSTORE.addKey(keyfile,key)
+                    logging.info('Successfully unlocked {} key'.format(keyfile))
+
+            key = KEYSTORE.getKey(keyfile)
+
+            sessionsModel.connect(index,key)
+
+            
+
 
     def onAddServer(self):
-        """Called when the user click on 'Add server' contextual menu item. Adds a new server to the underlying model.
+        """Called when the user clicks on 'Add server' contextual menu item. Adds a new server to the underlying model.
         """
 
         text, ok = QtWidgets.QInputDialog.getText(self, 'Add Server', 'Enter server name:')
