@@ -1,5 +1,8 @@
 import collections
 import os
+import platform
+import re
+import subprocess
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -64,20 +67,21 @@ class SessionDialog(QtWidgets.QDialog):
 
         keyTypeLayout = QtWidgets.QHBoxLayout()
         self._radioButtonGroup = QtWidgets.QButtonGroup(self)
-        r0 = QtWidgets.QRadioButton('RSA')
-        self._radioButtonGroup.addButton(r0)
-        r1 = QtWidgets.QRadioButton('ECDSA')
-        self._radioButtonGroup.addButton(r1)
-        r2 = QtWidgets.QRadioButton('ED25519')
-        self._radioButtonGroup.addButton(r2)
+        self._keytypesRadioBUttons = {}
+        self._keytypesRadioBUttons['RSA'] = QtWidgets.QRadioButton('RSA')
+        self._radioButtonGroup.addButton(self._keytypesRadioBUttons['RSA'])
+        self._keytypesRadioBUttons['ECDSA'] = QtWidgets.QRadioButton('ECDSA')
+        self._radioButtonGroup.addButton(self._keytypesRadioBUttons['ECDSA'])
+        self._keytypesRadioBUttons['ED25519'] = QtWidgets.QRadioButton('ED25519')
+        self._radioButtonGroup.addButton(self._keytypesRadioBUttons['ED25519'])
         self._radioButtonGroup.setExclusive(True)
         for b in self._radioButtonGroup.buttons():
             if b.text() == self._data['keytype']:
                 b.setChecked(True)
                 break
-        keyTypeLayout.addWidget(r0)
-        keyTypeLayout.addWidget(r1)
-        keyTypeLayout.addWidget(r2)
+        keyTypeLayout.addWidget(self._keytypesRadioBUttons['RSA'])
+        keyTypeLayout.addWidget(self._keytypesRadioBUttons['ECDSA'])
+        keyTypeLayout.addWidget(self._keytypesRadioBUttons['ED25519'])
 
         self._password = QtWidgets.QLineEdit()
         self._password.setEchoMode(QtWidgets.QLineEdit.Password)
@@ -113,6 +117,7 @@ class SessionDialog(QtWidgets.QDialog):
 
         self.setLayout(mainLayout)
 
+        self._key.editingFinished.connect(self.onGuessKeyType)
         self._browseKey.clicked.connect(self.onBrowsePrivateKey)
 
     def accept(self):
@@ -155,6 +160,34 @@ class SessionDialog(QtWidgets.QDialog):
             return
 
         self._key.setText(filename)
+
+        self.onGuessKeyType()
+
+    def onGuessKeyType(self):
+        """Guess the key type from the key file.
+
+        Unix only.
+        """
+
+        if platform.system() == 'Windows':
+            return
+
+        keyfile = self._key.text().strip()
+        if not keyfile:
+            return
+        
+        try:
+            p = subprocess.Popen(['ssh-keygen', '-l', '-f',keyfile], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, err = p.communicate()
+            rc = p.returncode
+            if rc != 0:
+                raise
+            keytype = re.search('\((.*)\)',output.decode()).group(1)
+            if keytype not in self._keytypesRadioBUttons:
+                raise
+            self._keytypesRadioBUttons[keytype].setChecked(True)
+        except:
+            return
 
     def validate(self):
         """Validate the settings.
