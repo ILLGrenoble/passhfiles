@@ -234,7 +234,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
 
         self.layoutAboutToBeChanged.emit()
-        self._entries = sorted(self._entries, key=lambda x : x[col],reverse=order)
+        self._entries = sorted(self._entries, key=lambda x : (x[col] is not None, x[col]),reverse=order)
         self.layoutChanged.emit()
 
     @abc.abstractmethod
