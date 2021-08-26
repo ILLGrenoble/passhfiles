@@ -80,17 +80,6 @@ class SessionsTreeView(QtWidgets.QTreeView):
             sessionsModel = self.model()
             sessionsModel.registerSSHKey(index,True)
 
-    def onAddServer(self):
-        """Called when the user clicks on 'Add server' contextual menu item. Adds a new server to the underlying model.
-        """
-
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Server', 'Enter server name:')
-        if ok and text.strip():
-            sessionIndex = self.currentIndex()
-            sessionsModel = self.model()
-            sessionsModel.addServer(text.strip(),sessionIndex.internalPointer())
-            sessionsModel.saveSessions(sessionsDatabasePath())
-
     def onAddSession(self):
         """Called when the user clicks on 'Add session' contextual menu item. Adds a new session to the underlying model.
         """
@@ -123,15 +112,6 @@ class SessionsTreeView(QtWidgets.QTreeView):
 
         self.openBrowsersSignal.emit(currentIndex) 
         
-    def onConnect(self):
-        """Called when the user click on 'Connect' contextual menu item. 
-        Establishes the SSH connection for the selected session.
-        """
-
-        sessionIndex = self.currentIndex()
-        sessionsModel = self.model()
-        sessionsModel.connect(sessionIndex)
-
     def onDeleteSession(self):
         """Called when the user clicks on 'Delete' contextual menu item.
         Delete the selected session.
@@ -202,13 +182,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
                 editAction.triggered.connect(self.onEditSession)
                 deleteAction = menu.addAction('Delete')
                 deleteAction.triggered.connect(self.onDeleteSession)
-                connectAction = menu.addAction('Connect')
-                connectAction.triggered.connect(self.onConnect)
-                menu.addAction(connectAction)
-                addServerAction = menu.addAction('Add server')
-                addServerAction.triggered.connect(self.onAddServer)
-                menu.addAction(addServerAction)
-                findServersAction = menu.addAction('Find servers')
+                findServersAction = menu.addAction('Refresh servers list')
                 findServersAction.triggered.connect(self.onFindServers)
                 menu.addAction(findServersAction)
                 menu.exec_(QtGui.QCursor.pos())
