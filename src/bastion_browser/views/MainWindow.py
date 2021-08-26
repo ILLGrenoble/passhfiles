@@ -1,11 +1,8 @@
-import collections
-import io
 import logging
 import os
-import paramiko
-import socket
+import platform
+import subprocess
 import sys
-import yaml
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -38,6 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loadSessions()
 
         self.loadPreferencesFile()
+
+        self.checkSSHAgent()
 
     def _buildMenu(self):
         """Build the menu.
@@ -77,6 +76,27 @@ class MainWindow(QtWidgets.QMainWindow):
         aboutAction.triggered.connect(self.onLaunchAboutDialog)
 
         helpMenu.addAction(aboutAction)
+
+    def checkSSHAgent(self):
+        """Check for a running SSH agent (On Unix) and log some info in cas where one is found.
+        """
+
+        if platform.system() not in ['Linux','Darwin']:
+            return
+
+        p1 = subprocess.Popen(['ps','ax'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        p2 = subprocess.Popen(['grep', '[s]sh-agent'],stdin=p1.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        p3 = subprocess.Popen(['wc', '-l'],stdin=p2.stdout,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        out,err = p3.communicate()
+
+        err = err.decode().strip()
+        if err:
+            logging.error(err)
+            return
+
+        nAgents = int(out.decode().strip())
+        if nAgents > 0:
+            logging.info('A SSH agent is running. Please check that your keys are registered before opening a session.')
 
     def closeEvent(self, event):
         """Called when the user quit the application by closing the main window.

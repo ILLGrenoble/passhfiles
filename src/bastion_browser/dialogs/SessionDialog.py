@@ -205,9 +205,7 @@ class SessionDialog(QtWidgets.QDialog):
         port = self._port.value()
 
         key = self._key.text().strip()
-        if not key:
-            return False, 'No key provided'
-        if not os.path.exists(key):
+        if key and not os.path.exists(key):
             return False, 'The path to private key does not exist'
 
         keyType = [b.text() for b in self._radioButtonGroup.buttons() if b.isChecked()][0]

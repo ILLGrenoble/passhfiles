@@ -10,7 +10,7 @@ class KeyStore(metaclass=SingletonMeta):
         """Constructor.
         """
 
-        self._keys = {}
+        self._keys = {'':None}
 
     def addKey(self, keyfile, key):
         """Add a key to the store.

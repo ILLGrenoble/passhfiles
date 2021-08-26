@@ -647,13 +647,13 @@ class SessionsModel(QtCore.QAbstractItemModel):
             if not ok:
                 return                
             
-            success,key = checkAndGetSSHKey(keyfile,keytype,password)
-            if not success:
-                logging.error('Invalid password for unlocking {} key'.format(keyfile))
-                return
-            else:
+            success,key = checkAndGetSSHKey(keyfile,keytype,password.strip())
+            if success:
                 KEYSTORE.addKey(keyfile,key)
                 logging.info('Successfully unlocked {} key'.format(keyfile))
+            else:
+                logging.error('Invalid password for unlocking {} key'.format(keyfile))
+                return
 
         key = KEYSTORE.getKey(keyfile)
 
