@@ -415,37 +415,6 @@ class SessionsModel(QtCore.QAbstractItemModel):
         serverNode.addFavorite(fileSystemType,currentDirectory)
         self.saveSessions(sessionsDatabasePath())
 
-    def registerSSHKey(self, sessionIndex, connect=True):
-        """Register a ssh key in the key store.
-
-        Args:
-            sessionIndex (PyQt5.QtCore.QModelIndex): the session index
-            connect (bool): if True establish the connection
-        """
-
-        node = sessionIndex.internalPointer()
-        sessionData = node.data(0)
-
-        keyfile = sessionData['key']
-        keytype = sessionData['keytype']
-        if not KEYSTORE.hasKey(keyfile):
-            password, ok = QtWidgets.QInputDialog.getText(None, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
-            if not ok:
-                return                
-            
-            success,key = checkAndGetSSHKey(keyfile,keytype,password)
-            if not success:
-                logging.error('Invalid password for unlocking {} key'.format(keyfile))
-                return
-            else:
-                KEYSTORE.addKey(keyfile,key)
-                logging.info('Successfully unlocked {} key'.format(keyfile))
-
-        key = KEYSTORE.getKey(keyfile)
-
-        if connect:
-            self.connect(sessionIndex,key)
-
     def clear(self):
         """Clear the model.
         """
@@ -549,6 +518,19 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
         return None
 
+    def disconnect(self, sessionIndex):
+        """Disconnect the SSH connection for a given session.
+
+        Args:
+            sessionIndex (PyQt5.QtCore.QModelIndex): the session index
+        """
+
+        sessionNode = sessionIndex.internalPointer()
+        sshSession = sessionNode.sshSession()
+        if sshSession is not None:
+            sshSession.close()
+            sessionNode.setSSHSession(None)
+
     def findServers(self, sessionIndex):
         """Find the servers bound to a bastion session and add them to the model.
 
@@ -650,6 +632,37 @@ class SessionsModel(QtCore.QAbstractItemModel):
             if p:
                 return QtCore.QAbstractItemModel.createIndex(self, p.row(), 0, p)
         return QtCore.QModelIndex()
+
+    def registerSSHKey(self, sessionIndex, connect=True):
+        """Register a ssh key in the key store.
+
+        Args:
+            sessionIndex (PyQt5.QtCore.QModelIndex): the session index
+            connect (bool): if True establish the connection
+        """
+
+        node = sessionIndex.internalPointer()
+        sessionData = node.data(0)
+
+        keyfile = sessionData['key']
+        keytype = sessionData['keytype']
+        if not KEYSTORE.hasKey(keyfile):
+            password, ok = QtWidgets.QInputDialog.getText(None, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
+            if not ok:
+                return                
+            
+            success,key = checkAndGetSSHKey(keyfile,keytype,password)
+            if not success:
+                logging.error('Invalid password for unlocking {} key'.format(keyfile))
+                return
+            else:
+                KEYSTORE.addKey(keyfile,key)
+                logging.info('Successfully unlocked {} key'.format(keyfile))
+
+        key = KEYSTORE.getKey(keyfile)
+
+        if connect:
+            self.connect(sessionIndex,key)
 
     def removeRow(self, index, parentIndex):
         """Remove a row from the model.

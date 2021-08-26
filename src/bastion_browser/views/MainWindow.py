@@ -84,6 +84,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         helpMenu.addAction(aboutAction)
 
+    def closeEvent(self, event):
+        """Called when the user quit the application by closing the main window.
+
+        Args:
+            event (PyQt5.QtGui.QCloseEvent): the close event
+        """
+
+        self.disconnectAll()
+
+        return super(MainWindow,self).closeEvent(event)
+
     def _createFileSystemWidget(self, layout):
         """Create a file system widget.
 
@@ -111,6 +122,16 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(tableView)
 
         return layout
+
+    def disconnectAll(self):
+        """Disconnects all SSH session established so far.
+        """
+
+        sessionsModel = self._sessionsTreeView.model()
+
+        for i in range(sessionsModel.rowCount()):
+            index = sessionsModel.index(i,0)
+            sessionsModel.disconnect(index)
 
     def _initUi(self):
         """Setup the main window.
@@ -243,6 +264,7 @@ class MainWindow(QtWidgets.QMainWindow):
         choice = QtWidgets.QMessageBox.question(
             self, 'Quit', "Do you really want to quit?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
+            self.disconnectAll()
             sys.exit()
 
     def onSaveSessions(self):
