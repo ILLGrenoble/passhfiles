@@ -19,8 +19,7 @@ class SessionDialog(QtWidgets.QDialog):
                    'user':'passhport',
                    'port':22,
                    'key':'',
-                   'keytype': 'ED25519',
-                   'password':''}
+                   'keytype': 'ED25519'}
 
     def __init__(self, parent, newSession, data=None):
         """Constructor.
@@ -82,16 +81,6 @@ class SessionDialog(QtWidgets.QDialog):
         keyTypeLayout.addWidget(self._keytypesRadioBUttons['ECDSA'])
         keyTypeLayout.addWidget(self._keytypesRadioBUttons['ED25519'])
 
-        self._password = QtWidgets.QLineEdit()
-        self._password.setEchoMode(QtWidgets.QLineEdit.Password)
-
-        try:
-            password = REFKEY.decrypt(self._data['password']).decode() if self._data['password'] else ''
-        except Exception as e:
-            pass
-        else:
-            self._password.setText(password)
-
         self._buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self._buttonBox.accepted.connect(self.accept)
         self._buttonBox.rejected.connect(self.reject)
@@ -106,7 +95,6 @@ class SessionDialog(QtWidgets.QDialog):
         formLayout.addRow(QtWidgets.QLabel('Port'),self._port)
         formLayout.addRow(QtWidgets.QLabel('Private key'),keyHLayout)
         formLayout.addRow(QtWidgets.QLabel('Key type'),keyTypeLayout)
-        formLayout.addRow(QtWidgets.QLabel('Password'),self._password)
 
         mainLayout.addLayout(formLayout)
 
@@ -224,17 +212,11 @@ class SessionDialog(QtWidgets.QDialog):
 
         keyType = [b.text() for b in self._radioButtonGroup.buttons() if b.isChecked()][0]
 
-        # If a password is set, encrypt it using the application key as a generator
-        password = self._password.text().strip() if self._password.text().strip() else None
-        if password is not None:
-            password = REFKEY.encrypt(bytes(password,'utf-8'))
-
         self._data = collections.OrderedDict((('name',name),
                                               ('address',address),
                                               ('user',user),
                                               ('port',port),
                                               ('key',key),
-                                              ('keytype',keyType),
-                                              ('password',password)))
+                                              ('keytype',keyType)))
 
         return True, None

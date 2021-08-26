@@ -35,7 +35,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
         self.customContextMenuRequested.connect(self.onShowContextualMenu)
 
         self.clicked.connect(self.onBrowseFiles)
-    
+
     def keyPressEvent(self, event):
         """Event triggered when user press a key of the keyboard.
 
@@ -75,32 +75,10 @@ class SessionsTreeView(QtWidgets.QTreeView):
             self.clearSelection()
             return
 
-        sessionsModel = self.model()
-
         node = index.internalPointer()
         if isinstance(node,SessionNode):
-            sessionData = node.data(0)
-            keyfile = sessionData['key']
-            keytype = sessionData['keytype']
-            if not KEYSTORE.hasKey(keyfile):
-                password, ok = QtWidgets.QInputDialog.getText(self, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
-                if not ok:
-                    return                
-                
-                success,key = checkAndGetSSHKey(keyfile,keytype,password)
-                if not success:
-                    logging.error('Invalid password for unlocking {} key'.format(keyfile))
-                    return
-                else:
-                    KEYSTORE.addKey(keyfile,key)
-                    logging.info('Successfully unlocked {} key'.format(keyfile))
-
-            key = KEYSTORE.getKey(keyfile)
-
-            sessionsModel.connect(index,key)
-
-            
-
+            sessionsModel = self.model()
+            sessionsModel.registerSSHKey(index,True)
 
     def onAddServer(self):
         """Called when the user clicks on 'Add server' contextual menu item. Adds a new server to the underlying model.
@@ -123,13 +101,13 @@ class SessionsTreeView(QtWidgets.QTreeView):
             sessionData = sessionDialog.data()
             sessionsModel = self.model()
             sessionsModel.addSession(sessionData)
+            sessionIndex = sessionsModel.index(sessionsModel.rowCount()-1,0)
+            sessionsModel.registerSSHKey(sessionIndex,True)
+            sessionsModel.findServers(sessionIndex)
             sessionsModel.saveSessions(sessionsDatabasePath())
-            lastIndex = sessionsModel.index(sessionsModel.rowCount()-1,0)
-            sessionsModel.connect(lastIndex)
-            sessionsModel.findServers(lastIndex)
 
     def onBrowseFiles(self):
-        """Caled when the left-clicks on a server node. Opens the local and remote file browsers.
+        """Called when the user left-clicks on a server node. Opens the local and remote file browsers.
         """
 
         currentIndex = self.currentIndex()
@@ -176,7 +154,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
 
         selectedIndex = self.currentIndex()
         currentSessionData = sessionsModel.data(selectedIndex,QtCore.Qt.UserRole)
-        sessionDialog = SessionDialog(self,False, currentSessionData)
+        sessionDialog = SessionDialog(self,False,currentSessionData)
 
         if sessionDialog.exec_():
             newSessionData = sessionDialog.data()
@@ -185,6 +163,8 @@ class SessionsTreeView(QtWidgets.QTreeView):
             else:
                 sessionsModel.moveSession(selectedIndex, newSessionData)
 
+            sessionsModel.registerSSHKey(selectedIndex,True)
+            sessionsModel.findServers(selectedIndex)
             sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onFindServers(self):
@@ -199,6 +179,7 @@ class SessionsTreeView(QtWidgets.QTreeView):
             serverIndex = sessionsModel.index(i,0,sessionIndex)
             sessionsModel.removeRow(serverIndex,sessionIndex)
         sessionsModel.findServers(sessionIndex)
+        sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onShowContextualMenu(self, point):
         """Pops up a contextual menu when the user right-clicks on the sessions view.

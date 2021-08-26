@@ -11,6 +11,7 @@ import yaml
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser import REFKEY
+from bastion_browser.kernel.KeyStore import KEYSTORE
 from bastion_browser.utils.Platform import iconsDirectory, sessionsDatabasePath
 from bastion_browser.utils.Security import checkAndGetSSHKey
 
@@ -413,6 +414,37 @@ class SessionsModel(QtCore.QAbstractItemModel):
         serverNode = serverIndex.internalPointer()
         serverNode.addFavorite(fileSystemType,currentDirectory)
         self.saveSessions(sessionsDatabasePath())
+
+    def registerSSHKey(self, sessionIndex, connect=True):
+        """Register a ssh key in the key store.
+
+        Args:
+            sessionIndex (PyQt5.QtCore.QModelIndex): the session index
+            connect (bool): if True establish the connection
+        """
+
+        node = sessionIndex.internalPointer()
+        sessionData = node.data(0)
+
+        keyfile = sessionData['key']
+        keytype = sessionData['keytype']
+        if not KEYSTORE.hasKey(keyfile):
+            password, ok = QtWidgets.QInputDialog.getText(None, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
+            if not ok:
+                return                
+            
+            success,key = checkAndGetSSHKey(keyfile,keytype,password)
+            if not success:
+                logging.error('Invalid password for unlocking {} key'.format(keyfile))
+                return
+            else:
+                KEYSTORE.addKey(keyfile,key)
+                logging.info('Successfully unlocked {} key'.format(keyfile))
+
+        key = KEYSTORE.getKey(keyfile)
+
+        if connect:
+            self.connect(sessionIndex,key)
 
     def clear(self):
         """Clear the model.
