@@ -111,7 +111,16 @@ class SessionsTreeView(QtWidgets.QTreeView):
             return
 
         self.openBrowsersSignal.emit(currentIndex) 
-        
+
+    def onConnect(self):
+        """Called when the user click on 'Connect' contextual menu item. 
+        Establishes the SSH connection for the selected session.
+        """
+
+        sessionIndex = self.currentIndex()
+        sessionsModel = self.model()
+        sessionsModel.connect(sessionIndex)
+
     def onDeleteSession(self):
         """Called when the user clicks on 'Delete' contextual menu item.
         Delete the selected session.
@@ -182,6 +191,8 @@ class SessionsTreeView(QtWidgets.QTreeView):
                 editAction.triggered.connect(self.onEditSession)
                 deleteAction = menu.addAction('Delete')
                 deleteAction.triggered.connect(self.onDeleteSession)
+                connectAction = menu.addAction('(Re)connect')
+                connectAction.triggered.connect(self.onConnect)
                 findServersAction = menu.addAction('Refresh servers list')
                 findServersAction.triggered.connect(self.onFindServers)
                 menu.addAction(findServersAction)

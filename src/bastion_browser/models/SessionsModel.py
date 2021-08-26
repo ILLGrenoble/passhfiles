@@ -453,10 +453,6 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
         try:
             sshSession.connect(data['address'], username=data['user'], pkey=key, port=data['port'])
-        except socket.gaierror:
-            logging.error('Invalid address')
-        except paramiko.ssh_exception.NoValidConnectionsError:
-            logging.error('Invalid connection')
         except Exception as e:
             logging.error(str(e))
         else:

@@ -53,12 +53,6 @@ class MainWindow(QtWidgets.QMainWindow):
         addSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
         fileMenu.addAction(addSessionAction)
 
-        saveSessionsAction = QtWidgets.QAction('&Save Session(s)', self)
-        saveSessionsAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'save_sessions.png')))
-        saveSessionsAction.setStatusTip('Save current sessions')
-        saveSessionsAction.triggered.connect(self.onSaveSessions)
-        fileMenu.addAction(saveSessionsAction)
-
         fileMenu.addSeparator()
 
         preferencesAction = QtWidgets.QAction('&Preferences', self)
@@ -266,14 +260,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if choice == QtWidgets.QMessageBox.Yes:
             self.disconnectAll()
             sys.exit()
-
-    def onSaveSessions(self):
-        """Save the sessions.
-        """
-
-        sessionsModel = self._sessionsTreeView.model()
-
-        sessionsModel.saveSessions(sessionsDatabasePath())
 
     def onSetPreferences(self):
         """Sets the preferences.
