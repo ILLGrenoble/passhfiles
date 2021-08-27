@@ -96,8 +96,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             return self._currentDirectory
 
     @abc.abstractmethod
-    def editFile(self, path):
-        """Edit the file using a text editor (set via the preferences settings).
+    def openFile(self, path):
+        """Open the file using its default application.
 
         Args:
             path: the path of the file to be edited

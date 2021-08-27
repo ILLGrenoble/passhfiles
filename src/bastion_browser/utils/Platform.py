@@ -185,15 +185,6 @@ def iconsDirectory():
 
     return os.path.join(applicationDirectory(),'icons')
 
-def preferencesPath():
-    """Returns the path to the preferences file.
-
-    Returns:
-        str: the path to the preferences file
-    """
-
-    return os.path.join(applicationSettingsDirectory(),'preferences.yml')
-
 def sessionsDatabasePath():
     """Returns the path to the sessions file.
 

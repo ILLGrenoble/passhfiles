@@ -6,7 +6,6 @@ import tempfile
 
 import scp
 
-from bastion_browser.kernel.Preferences import PREFERENCES
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
 from bastion_browser.utils.Platform import unixNormPath, unixPathsJoin
@@ -35,21 +34,12 @@ class RemoteFileSystemModel(IFileSystemModel):
         else:
             self.setDirectory(self._currentDirectory)
 
-    def editFile(self, path):
-        """Edit the file using a text editor (set via the preferences settings).
+    def openFile(self, path):
+        """Open the file using its default application.
 
         Args:
             path: the path of the file to be edited
         """
-
-        editor = PREFERENCES['editor']
-        if not editor:
-            logging.error('No text editor set in the preferences')
-            if platform.system() == 'Linux':
-                editor = '/usr/bin/xdg-open'
-                logging.info('xdg-open will be used as a replacement')
-            else:
-                return
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
@@ -57,7 +47,13 @@ class RemoteFileSystemModel(IFileSystemModel):
         cmd = scp.SCPClient(sshSession.get_transport())
         cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),path),tempFile, recursive=True)
         try:
-            subprocess.call([editor,tempFile])
+            system = platform.system()
+            if system == 'Linux':
+                subprocess.call(['xdg-open',path])
+            elif system == 'Darwin':
+                subprocess.call(['open',path])
+            elif system == 'Windows':
+                subprocess.call(['start',path])
         except Exception as e:
             logging.error(str(e))
 
@@ -109,7 +105,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         if entry[2] == 'Folder':
             self.setDirectory(fullPath)
         else:
-            self.editFile(fullPath)
+            self.openFile(fullPath)
 
     def removeEntries(self, selectedRow):
         """Remove some entries of the model.

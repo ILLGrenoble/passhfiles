@@ -7,11 +7,9 @@ import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from bastion_browser.dialogs.AboutDialog import AboutDialog
-from bastion_browser.dialogs.PreferencesDialog import PreferencesDialog
-from bastion_browser.kernel.Preferences import PREFERENCES, loadPreferences
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
 from bastion_browser.models.RemoteFileSystemModel import RemoteFileSystemModel
-from bastion_browser.utils.Platform import homeDirectory, iconsDirectory, preferencesPath, sessionsDatabasePath
+from bastion_browser.utils.Platform import homeDirectory, iconsDirectory, sessionsDatabasePath
 from bastion_browser.utils.ProgressBar import progressBar
 from bastion_browser.views.FileSystemTableView import FileSystemTableView
 from bastion_browser.views.SessionsTreeView import SessionsTreeView
@@ -34,8 +32,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.loadSessions()
 
-        self.loadPreferencesFile()
-
         self.checkSSHAgent()
 
     def _buildMenu(self):
@@ -51,14 +47,6 @@ class MainWindow(QtWidgets.QMainWindow):
         addSessionAction.setStatusTip('Open ssh session dialog')
         addSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
         fileMenu.addAction(addSessionAction)
-
-        fileMenu.addSeparator()
-
-        preferencesAction = QtWidgets.QAction('&Preferences', self)
-        preferencesAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'preferences.png')))
-        preferencesAction.setStatusTip('Open preferences settings')
-        preferencesAction.triggered.connect(self.onSetPreferences)
-        fileMenu.addAction(preferencesAction)
 
         fileMenu.addSeparator()
 
@@ -204,15 +192,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._sessionsTreeView.openBrowsersSignal.connect(self.onOpenBrowsers)
 
-    def loadPreferencesFile(self):
-        """Load the preferences settings.
-        """
-
-        if not os.path.exists(preferencesPath()):
-            return
-
-        loadPreferences(preferencesPath())
-
     def loadSessions(self):
         """Load the sessions.
         """
@@ -280,13 +259,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if choice == QtWidgets.QMessageBox.Yes:
             self.disconnectAll()
             sys.exit()
-
-    def onSetPreferences(self):
-        """Sets the preferences.
-        """
-
-        dialog = PreferencesDialog(self)
-        dialog.exec_()
 
     @property
     def sessionsTreeView(self):
