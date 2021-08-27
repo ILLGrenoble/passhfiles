@@ -84,7 +84,7 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
-    def initContextualMenu(self, selectedRow):
+    def initContextualMenu(self):
         """Initializes the context menu.
         """
 
@@ -106,21 +106,17 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         self._menu.addSeparator()
 
-        self._addToFavoritesAction = self._menu.addAction('Add to favorites')
-        self._addToFavoritesAction.triggered.connect(self.onAddToFavorites)
-        self._menu.addAction(self._addToFavoritesAction)
-
         self._favoritesMenu = QtWidgets.QMenu('Favorites')
         self._menu.addMenu(self._favoritesMenu)
 
-    def onAddToFavorites(self):
+    def onAddToFavorites(self, selectedRow):
         """Called when the user add a path to the favorites.
         """
 
         if self.model() is None:
             return
 
-        self.model().addToFavorites()
+        self.model().addToFavorites(selectedRow)
 
     def onCreateDirectory(self):
         """Called when the user creates a directory.
@@ -171,21 +167,26 @@ class FileSystemTableView(QtWidgets.QTableView):
         selectedRow = self.indexAt(point).row()
 
         if self._menu is None:
-            self.initContextualMenu(selectedRow)
-
-        self._menu.removeAction(self._favoritesMenu.menuAction())
+            self.initContextualMenu()
 
         if self._renameConnection is not None:
             self._renameAction.disconnect(self._renameConnection)
         self._renameConnection = self._renameAction.triggered.connect(lambda item, row=selectedRow: self.onRenameEntry(row))
 
+        self._menu.removeAction(self._favoritesMenu.menuAction())
         self._favoritesMenu = QtWidgets.QMenu('Favorites')
 
+        if self.model().isDirectory(selectedRow):
+            self._addToFavoritesAction = self._favoritesMenu.addAction('Add to favorites')
+            self._addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
+
+        self._gotoFavoritesMenu = QtWidgets.QMenu('Go to')
         favorites = self.model().favorites()
         for fav in favorites:
-            favAction = self._favoritesMenu.addAction(fav)
+            favAction = self._gotoFavoritesMenu.addAction(fav)
             favAction.triggered.connect(lambda item, f=fav : self.onGoToFavorite(f))
 
+        self._favoritesMenu.addMenu(self._gotoFavoritesMenu)
         self._menu.addMenu(self._favoritesMenu)
 
         self._menu.exec_(QtGui.QCursor.pos())

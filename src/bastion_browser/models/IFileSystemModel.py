@@ -37,11 +37,16 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self.setDirectory(startingDirectory)
 
-    def addToFavorites(self):
+    def addToFavorites(self, selectedRow):
         """Add the current directory to favorites.
         """
 
-        self.addToFavoritesSignal.emit(self._currentDirectory)
+        if selectedRow < 0 or selectedRow >= len(self._entries):
+            return
+
+        entry = self._entries[selectedRow][0]
+
+        self.addToFavoritesSignal.emit(os.path.join(self._currentDirectory,entry))
 
     @abc.abstractmethod
     def createDirectory(self, directoryName):
@@ -151,6 +156,20 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return IFileSystemModel.sections[section]
+
+    def isDirectory(self, row):
+        """Return true if the entry is a directory.
+
+        Args:
+            row (int): the row
+        """
+
+        if row < 0 or row >= len(self._entries):
+            raise IndexError('Invalid row number')
+
+        entry = self._entries[row]
+
+        return (entry[2] == 'Folder')
 
     def onEnterDirectory(self, index):
         """Called when the user double clicks on a model's entry. 
