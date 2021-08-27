@@ -1,6 +1,7 @@
 import collections
 import logging
 import os
+import platform
 import paramiko
 import subprocess
 import time
@@ -624,11 +625,14 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
         serverNode = serverIndex.internalPointer()
         serverName = serverNode.name()
-
         sessionNode = serverNode.parent()
         sessionData = sessionNode.data(0)
 
-        subprocess.Popen(['xterm','-e','ssh {}@{} {}'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        system = platform.system()
+        if system == 'Linux':
+            subprocess.Popen(['xterm','-e','ssh {}@{} {}'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        elif system == 'Darwin': 
+            subprocess.Popen(['osascript','-e','tell app "Terminal" to do script "ssh {}@{} {}"'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
     def parent(self, index):
         """Return the parent index of a given index.
