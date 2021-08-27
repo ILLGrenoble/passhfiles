@@ -1,9 +1,5 @@
-import io
 import logging
-import os
-import socket
-
-import paramiko
+import platform
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -170,6 +166,19 @@ class SessionsTreeView(QtWidgets.QTreeView):
         sessionsModel.findServers(sessionIndex)
         sessionsModel.saveSessions(sessionsDatabasePath())
 
+    def onOpenTerminal(self):
+        """Called when the user clicks on 'Open terminal' contextual menu item. It opens a 
+        terminal on the remote location. 
+        """
+
+        if platform.system() == 'Windows':
+            logging.warning('Functionnality not yet available on Windows')
+            return
+
+        sessionsModel = self.model()
+        serverIndex = self.currentIndex()
+        sessionsModel.openTerminal(serverIndex)
+
     def onShowContextualMenu(self, point):
         """Pops up a contextual menu when the user right-clicks on the sessions view.
 
@@ -196,4 +205,9 @@ class SessionsTreeView(QtWidgets.QTreeView):
                 findServersAction = menu.addAction('Refresh servers list')
                 findServersAction.triggered.connect(self.onFindServers)
                 menu.addAction(findServersAction)
+                menu.exec_(QtGui.QCursor.pos())
+            elif isinstance(selectedItems[0].internalPointer(),ServerNode):
+                openTerminalAction = menu.addAction('Open terminal')
+                openTerminalAction.triggered.connect(self.onOpenTerminal)
+                menu.addAction(openTerminalAction)
                 menu.exec_(QtGui.QCursor.pos())

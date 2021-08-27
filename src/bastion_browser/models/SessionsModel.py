@@ -1,9 +1,8 @@
 import collections
-import io
 import logging
 import os
 import paramiko
-import socket
+import subprocess
 import time
 
 import yaml
@@ -615,6 +614,21 @@ class SessionsModel(QtCore.QAbstractItemModel):
         newSessionData['servers'] = collections.OrderedDict([(n.name(),n.data(0)) for n in serverNodes])
         self.removeRow(sessionIndex,sessionIndex.parent())
         self.addSession(newSessionData)
+
+    def openTerminal(self, serverIndex):
+        """Open a terminal on the remote location for a given server.
+
+        Args:
+            serverIndex (PyQt5.QtCore.QModelIndex): the server index
+        """
+
+        serverNode = serverIndex.internalPointer()
+        serverName = serverNode.name()
+
+        sessionNode = serverNode.parent()
+        sessionData = sessionNode.data(0)
+
+        subprocess.Popen(['xterm','-e','ssh {}@{} {}'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
     def parent(self, index):
         """Return the parent index of a given index.
