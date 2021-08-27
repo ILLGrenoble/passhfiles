@@ -84,7 +84,7 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
-    def initContextualMenu(self):
+    def initContextualMenu(self, selectedIndex):
         """Initializes the context menu.
         """
 
@@ -103,6 +103,10 @@ class FileSystemTableView(QtWidgets.QTableView):
         self._renameAction = self._menu.addAction('Rename')
         self._renameConnection = None
         self._menu.addAction(self._renameAction)
+
+        self._openAction = self._menu.addAction('Open')
+        self._openConnection = None
+        self._menu.addAction(self._openAction)
 
         self._menu.addSeparator()
 
@@ -143,6 +147,12 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         self.model().setDirectory(path)
 
+    def onOpenEntry(self,selectedIndex):
+        """Called when the user open an entry.
+        """
+
+        self.model().onEnterDirectory(selectedIndex)
+
     def onRenameEntry(self, selectedRow):
         """Called when the user rename one entry.
 
@@ -164,14 +174,19 @@ class FileSystemTableView(QtWidgets.QTableView):
         if self.model() is None:
             return
 
-        selectedRow = self.indexAt(point).row()
+        selectedIndex = self.indexAt(point)
+        selectedRow = selectedIndex.row()
 
         if self._menu is None:
-            self.initContextualMenu()
+            self.initContextualMenu(selectedIndex)
 
         if self._renameConnection is not None:
             self._renameAction.disconnect(self._renameConnection)
         self._renameConnection = self._renameAction.triggered.connect(lambda item, row=selectedRow: self.onRenameEntry(row))
+
+        if self._openConnection is not None:
+            self._openAction.disconnect(self._openConnection)
+        self._openConnection = self._openAction.triggered.connect(lambda item, index=selectedIndex : self.onOpenEntry(index))
 
         self._menu.removeAction(self._favoritesMenu.menuAction())
         self._favoritesMenu = QtWidgets.QMenu('Favorites')
