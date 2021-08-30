@@ -16,6 +16,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
     addToFavoritesSignal = QtCore.pyqtSignal(str)
 
+    currentDirectoryChangedSignal = QtCore.pyqtSignal(str)
+
     def __init__(self, serverIndex, startingDirectory, *args, **kwargs):
         """Constructor.
 

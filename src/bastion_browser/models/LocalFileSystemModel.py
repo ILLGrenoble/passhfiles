@@ -186,6 +186,8 @@ class LocalFileSystemModel(IFileSystemModel):
 
         self.layoutChanged.emit()
 
+        self.currentDirectoryChangedSignal.emit(self._currentDirectory)
+
     def transferData(self, data):
         """Transfer some data (directories and/or files) from a remote host to the local file system.
 

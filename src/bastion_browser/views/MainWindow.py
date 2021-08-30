@@ -97,34 +97,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return super(MainWindow,self).closeEvent(event)
 
-    def _createFileSystemWidget(self, layout):
-        """Create a file system widget.
-
-        Args:
-            layout (QtWidgets.QLayout): the layout
-        """
-
-        widget = QtWidgets.QWidget()
-        widget.setLayout(layout)
-
-        return widget
-
-    def _createFileSystemLayout(self, label, tableView):
-        """Create a file system layout.
-
-        The layout is made of a Qlabel on top of a table view.
-
-        Args:
-            label (str): the label for the layout
-            tableView (bastion_browser.views.FileSystemTableView): the table view
-        """
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(QtWidgets.QLabel(label))
-        layout.addWidget(tableView)
-
-        return layout
-
     def disconnectAll(self):
         """Disconnects all SSH session established so far.
         """
@@ -147,11 +119,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().addPermanentWidget(QtWidgets.QLabel('Progress'))
         self.statusBar().addPermanentWidget(self._progressBar)
 
-        self._sourceFileSystem = FileSystemTableView()
-        self._targetFileSystem = FileSystemTableView()
+        self._localFileSystem = FileSystemTableView()
+        self._remoteFileSystem = FileSystemTableView()
         
-        sourceFileSystemWidget = self._createFileSystemWidget(self._createFileSystemLayout('Local filesystem',self._sourceFileSystem))
-        targetFileSystemWidget = self._createFileSystemWidget(self._createFileSystemLayout('Remote filesystem',self._targetFileSystem))
+        self._localFileSystemLabel = QtWidgets.QLabel('Local filesystem')
+        self._localFileSystemLayout = QtWidgets.QVBoxLayout()
+        self._localFileSystemLayout.addWidget(self._localFileSystemLabel)
+        self._localFileSystemLayout.addWidget(self._localFileSystem)
+
+        self._remoteFileSystemLabel = QtWidgets.QLabel('Remote filesystem')
+        self._remoteFileSystemLayout = QtWidgets.QVBoxLayout()
+        self._remoteFileSystemLayout.addWidget(self._remoteFileSystemLabel)
+        self._remoteFileSystemLayout.addWidget(self._remoteFileSystem)
+
+        localFileSystemWidget = QtWidgets.QWidget()
+        localFileSystemWidget.setLayout(self._localFileSystemLayout)
+
+        remoteFileSystemWidget = QtWidgets.QWidget()
+        remoteFileSystemWidget.setLayout(self._remoteFileSystemLayout)
 
         leftPanelWidget = QtWidgets.QWidget()
         leftPaneLayout = QtWidgets.QVBoxLayout()
@@ -161,8 +146,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._splitter = QtWidgets.QSplitter()
         self._splitter.addWidget(leftPanelWidget)
-        self._splitter.addWidget(sourceFileSystemWidget)
-        self._splitter.addWidget(targetFileSystemWidget)
+        self._splitter.addWidget(localFileSystemWidget)
+        self._splitter.addWidget(remoteFileSystemWidget)
         self._splitter.setStretchFactor(0,1)
         self._splitter.setStretchFactor(1,2)
         self._splitter.setStretchFactor(2,2)
@@ -240,15 +225,20 @@ class MainWindow(QtWidgets.QMainWindow):
         """
 
         localFileSystemModel = LocalFileSystemModel(serverIndex, homeDirectory())
-        self._sourceFileSystem.setModel(localFileSystemModel)
-        self._sourceFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
+        self._localFileSystem.setModel(localFileSystemModel)
+        self._localFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
+        self._localFileSystemLabel.setText('Local filesystem ({})'.format(localFileSystemModel.currentDirectory()))
 
         remoteFileSystemModel = RemoteFileSystemModel(serverIndex, '/')
-        self._targetFileSystem.setModel(remoteFileSystemModel)
-        self._targetFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
+        self._remoteFileSystem.setModel(remoteFileSystemModel)
+        self._remoteFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
+        self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(remoteFileSystemModel.currentDirectory()))
 
         localFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('local',path))
         remoteFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('remote',path))
+
+        localFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._localFileSystemLabel.setText('Local filesystem ({})'.format(path)))
+        remoteFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(path)))
 
     def onQuitApplication(self):
         """Event called when the application is exited.
@@ -259,6 +249,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if choice == QtWidgets.QMessageBox.Yes:
             self.disconnectAll()
             sys.exit()
+
+    def onUpdateLabel(self, label, currentDirectory):
+        """Update the label on top of the file system with the current directory.
+
+        Args:
+            label (QtWidgets.QLabel): the label to update
+            currentDirectory (str): the current directory
+        """
 
     @property
     def sessionsTreeView(self):
