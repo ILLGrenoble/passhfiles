@@ -160,9 +160,6 @@ class SessionsTreeView(QtWidgets.QTreeView):
         sessionsModel = self.model()
         sessionIndex = self.currentIndex()
 
-        for i in range(sessionsModel.rowCount(sessionIndex))[::-1]:
-            serverIndex = sessionsModel.index(i,0,sessionIndex)
-            sessionsModel.removeRow(serverIndex,sessionIndex)
         sessionsModel.findServers(sessionIndex)
         sessionsModel.saveSessions(sessionsDatabasePath())
 

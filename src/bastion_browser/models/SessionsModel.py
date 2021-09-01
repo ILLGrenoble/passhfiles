@@ -1,6 +1,5 @@
 import collections
 import logging
-import os
 import platform
 import paramiko
 import subprocess
@@ -10,7 +9,6 @@ import yaml
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from bastion_browser import REFKEY
 from bastion_browser.kernel.KeyStore import KEYSTORE
 from bastion_browser.utils.Platform import iconsDirectory, sessionsDatabasePath
 from bastion_browser.utils.Security import checkAndGetSSHKey
@@ -263,7 +261,7 @@ class ServerNode:
 
         Args:
             fileSystemType: either 'local' or 'remote'
-            path (str): the path to be added to favorites
+            path (pathlib.Path): the path to be added to favorites
         """
 
         if not fileSystemType in ('local','remote'):
@@ -408,7 +406,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
         Args:
             serverIndex (PyQt5.QtCore.QModelIndex): the server index
             fileSystemType (str): either 'local' or 'remote'
-            currentDirectory (str): the path to be added to favorites
+            currentDirectory (pathlib.Path): the path to be added to favorites
         """
 
         serverNode = serverIndex.internalPointer()
@@ -422,6 +420,19 @@ class SessionsModel(QtCore.QAbstractItemModel):
         self.beginResetModel()
         self._root.clear()
         self.endResetModel()
+
+    def clearServers(self,sessionIndex):
+        """Clear the servers.
+
+        Args:
+            sessionIndex (PyQt5.QtCore.QModelIndex): the session index
+        """
+
+        for i in range(self.rowCount(sessionIndex))[::-1]:
+            serverIndex = self.index(i,0,sessionIndex)
+            self.removeRow(serverIndex,sessionIndex)
+
+        self.layoutChanged.emit()
 
     def columnCount(self, index):
         """Return the column count of the model for a given index.
@@ -480,9 +491,9 @@ class SessionsModel(QtCore.QAbstractItemModel):
                 return None
         elif role == QtCore.Qt.DecorationRole:
             if isinstance(node,SessionNode):
-                return QtGui.QIcon(os.path.join(iconsDirectory(),'session.png'))
+                return QtGui.QIcon(str(iconsDirectory().joinpath('session.png')))
             elif isinstance(node,ServerNode):
-                return QtGui.QIcon(os.path.join(iconsDirectory(),'server.png'))
+                return QtGui.QIcon(str(iconsDirectory().joinpath('server.png')))
             else:
                 return None
         elif role == QtCore.Qt.ToolTipRole:
@@ -533,6 +544,8 @@ class SessionsModel(QtCore.QAbstractItemModel):
         Args:
             sessionIndex (PyQt5.QtCore.QModelIndex): the session index
         """
+
+        self.clearServers(sessionIndex)
 
         sessionNode = sessionIndex.internalPointer()
         sshSession = sessionNode.sshSession()
@@ -585,12 +598,12 @@ class SessionsModel(QtCore.QAbstractItemModel):
             sessionsFile: the YAML file containing the sessions
         """
 
-        if not os.path.exists(sessionsFile):
+        if not sessionsFile.exists():
             logging.error('The session file {} does not exist'.format(sessionsFile))
             return
 
         try:
-            with open(sessionsFile,'r') as fin:
+            with open(str(sessionsFile),'r') as fin:
                 sessions = yaml.unsafe_load(fin)
         except Exception as e:
             logging.error(str(e))
@@ -659,21 +672,24 @@ class SessionsModel(QtCore.QAbstractItemModel):
         sessionData = node.data(0)
 
         keyfile = sessionData['key']
-        keytype = sessionData['keytype']
-        if not KEYSTORE.hasKey(keyfile):
-            password, ok = QtWidgets.QInputDialog.getText(None, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
-            if not ok:
-                return                
-            
-            success,key = checkAndGetSSHKey(keyfile,keytype,password.strip())
-            if success:
-                KEYSTORE.addKey(keyfile,key)
-                logging.info('Successfully unlocked {} key'.format(keyfile))
-            else:
-                logging.error('Invalid password for unlocking {} key'.format(keyfile))
-                return
+        if keyfile is None:
+            key = None
+        else:
+            keytype = sessionData['keytype']
+            if not KEYSTORE.hasKey(keyfile):
+                password, ok = QtWidgets.QInputDialog.getText(None, "Password prompt", "Please enter SSH key password:", QtWidgets.QLineEdit.Password)
+                if not ok:
+                    return                
+                
+                success,key = checkAndGetSSHKey(keyfile,keytype,password.strip())
+                if success:
+                    KEYSTORE.addKey(keyfile,key)
+                    logging.info('Successfully unlocked {} key'.format(keyfile))
+                else:
+                    logging.error('Invalid password for unlocking {} key'.format(keyfile))
+                    return
 
-        key = KEYSTORE.getKey(keyfile)
+            key = KEYSTORE.getKey(keyfile)
 
         if connect:
             self.connect(sessionIndex,key)
@@ -720,7 +736,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
         """Save the current sessions to a YAML file.
 
         Args:
-            sessionsFile (str): the path to the sessions file
+            sessionsFile (pathlib.Path): the path to the sessions file
         """
 
         sessionNodes = [self._root.child(i) for i in range(self._root.childCount())]
@@ -737,7 +753,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
             sessionsData.append(data)
         
         try:
-            with open(sessionsFile,'w') as fout:
+            with open(str(sessionsFile),'w') as fout:
                 yaml.dump(sessionsData,fout)
         except Exception as e:
             logging.error(str(e))

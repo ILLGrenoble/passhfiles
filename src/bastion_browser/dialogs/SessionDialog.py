@@ -1,13 +1,12 @@
 import collections
 import logging
-import os
+import pathlib
 import platform
 import re
 import subprocess
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from bastion_browser import REFKEY
 from bastion_browser.utils.Gui import mainWindow
 
 class SessionDialog(QtWidgets.QDialog):
@@ -60,7 +59,8 @@ class SessionDialog(QtWidgets.QDialog):
 
         keyHLayout = QtWidgets.QHBoxLayout()
         self._key = QtWidgets.QLineEdit()
-        self._key.setText(self._data['key'])
+        if self._data['key'] is not None:
+            self._key.setText(str(self._data['key']))
         self._browseKey = QtWidgets.QPushButton('Browse')
         keyHLayout.addWidget(self._key, stretch=2)
         keyHLayout.addWidget(self._browseKey,stretch=0)
@@ -204,9 +204,11 @@ class SessionDialog(QtWidgets.QDialog):
 
         port = self._port.value()
 
-        key = self._key.text().strip()
-        if key and not os.path.exists(key):
-            return False, 'The path to private key does not exist'
+        key = None
+        if self._key.text().strip():
+            key = pathlib.Path(self._key.text().strip()).resolve()
+            if not key.exists():
+                return False, 'The path to private key does not exist'
 
         keyType = [b.text() for b in self._radioButtonGroup.buttons() if b.isChecked()][0]
 

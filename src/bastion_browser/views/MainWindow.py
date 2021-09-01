@@ -1,12 +1,13 @@
 import logging
-import os
+import pathlib
 import platform
 import subprocess
 import sys
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 
 from bastion_browser.dialogs.AboutDialog import AboutDialog
+from bastion_browser.dialogs.KeysManagerDialog import KeysManagerDialog
 from bastion_browser.models.LocalFileSystemModel import LocalFileSystemModel
 from bastion_browser.models.RemoteFileSystemModel import RemoteFileSystemModel
 from bastion_browser.utils.Platform import homeDirectory, iconsDirectory, sessionsDatabasePath
@@ -34,6 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.checkSSHAgent()
 
+        self._copiedData = None
+
     def _buildMenu(self):
         """Build the menu.
         """
@@ -43,15 +46,23 @@ class MainWindow(QtWidgets.QMainWindow):
         fileMenu = menubar.addMenu('&Session')
 
         addSessionAction = QtWidgets.QAction('&Add Session', self)
-        addSessionAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'new_session.png')))
+        addSessionAction.setIcon(QtGui.QIcon(str(iconsDirectory().joinpath('new_session.png'))))
         addSessionAction.setStatusTip('Open ssh session dialog')
         addSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
         fileMenu.addAction(addSessionAction)
 
         fileMenu.addSeparator()
 
+        manageKeysAction = QtWidgets.QAction('&Manage Keys', self)
+        manageKeysAction.setIcon(QtGui.QIcon(str(iconsDirectory().joinpath('key.png'))))
+        manageKeysAction.setStatusTip('Open ssh session dialog')
+        manageKeysAction.triggered.connect(self.onOpenKeysManager)
+        fileMenu.addAction(manageKeysAction)
+
+        fileMenu.addSeparator()
+
         exitAction = QtWidgets.QAction('&Exit', self)
-        exitAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'exit.png')))
+        exitAction.setIcon(QtGui.QIcon(str(iconsDirectory().joinpath('exit.png'))))
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit')
         exitAction.triggered.connect(self.onQuitApplication)
@@ -60,7 +71,7 @@ class MainWindow(QtWidgets.QMainWindow):
         helpMenu = menubar.addMenu('&Help')
 
         aboutAction = QtWidgets.QAction('About',self)
-        aboutAction.setIcon(QtGui.QIcon(os.path.join(iconsDirectory(),'about.png')))
+        aboutAction.setIcon(QtGui.QIcon(str(iconsDirectory().joinpath('about.png'))))
         aboutAction.triggered.connect(self.onLaunchAboutDialog)
 
         helpMenu.addAction(aboutAction)
@@ -96,6 +107,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.disconnectAll()
 
         return super(MainWindow,self).closeEvent(event)
+
+    def copiedData(self):
+        """Getter for the copied data.
+
+        Returns:
+            tuple: the copied data
+        """
+
+        return self._copiedData
 
     def disconnectAll(self):
         """Disconnects all SSH session established so far.
@@ -170,8 +190,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._buildMenu()
 
-        iconPath = os.path.join(iconsDirectory(), 'bastion_browser.png')
-        self.setWindowIcon(QtGui.QIcon(iconPath))
+        self.setWindowIcon(QtGui.QIcon(str(iconsDirectory().joinpath('bastion_browser.png'))))
 
         self.show()
 
@@ -191,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         Args:
             fileSystemType (str): 'local' or 'remote'
-            path (str): the path to add to the favorites
+            path (pathlib.Path): the path to add to the favorites
         """
 
         sessionsModel = self._sessionsTreeView.model()
@@ -229,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._localFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
         self._localFileSystemLabel.setText('Local filesystem ({})'.format(localFileSystemModel.currentDirectory()))
 
-        remoteFileSystemModel = RemoteFileSystemModel(serverIndex, '/')
+        remoteFileSystemModel = RemoteFileSystemModel(serverIndex, pathlib.Path('/'))
         self._remoteFileSystem.setModel(remoteFileSystemModel)
         self._remoteFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
         self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(remoteFileSystemModel.currentDirectory()))
@@ -240,6 +259,16 @@ class MainWindow(QtWidgets.QMainWindow):
         localFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._localFileSystemLabel.setText('Local filesystem ({})'.format(path)))
         remoteFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(path)))
 
+        localFileSystemModel.dataCopiedSignal.connect(self.onSetCopiedData)
+        remoteFileSystemModel.dataCopiedSignal.connect(self.onSetCopiedData)
+
+    def onOpenKeysManager(self):
+        """Opens the key manager.
+        """
+
+        dialog = KeysManagerDialog(self)
+        dialog.exec_()
+
     def onQuitApplication(self):
         """Event called when the application is exited.
         """
@@ -249,6 +278,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if choice == QtWidgets.QMessageBox.Yes:
             self.disconnectAll()
             sys.exit()
+
+    def onSetCopiedData(self,data):
+        """Setter for the copid data.
+
+        Args:
+            data (tuple): the copied data
+        """
+
+        self._copiedData = data
+        print(self._copiedData)
 
     def onUpdateLabel(self, label, currentDirectory):
         """Update the label on top of the file system with the current directory.

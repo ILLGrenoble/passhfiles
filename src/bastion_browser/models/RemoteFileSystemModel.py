@@ -1,5 +1,5 @@
 import logging
-import os
+import pathlib
 import platform
 import subprocess
 import tempfile
@@ -8,7 +8,6 @@ import scp
 
 from bastion_browser.models.IFileSystemModel import IFileSystemModel
 from bastion_browser.utils.Numbers import sizeOf
-from bastion_browser.utils.Platform import unixNormPath, unixPathsJoin
 from bastion_browser.utils.ProgressBar import progressBar
 
 class RemoteFileSystemModel(IFileSystemModel):
@@ -22,7 +21,7 @@ class RemoteFileSystemModel(IFileSystemModel):
             directoryName: the name of the directory
         """
 
-        directoryName = unixPathsJoin(self._currentDirectory,directoryName)
+        directoryName = self._currentDirectory.joinpath(directoryName)
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
@@ -34,28 +33,22 @@ class RemoteFileSystemModel(IFileSystemModel):
         else:
             self.setDirectory(self._currentDirectory)
 
-    def openFile(self, path):
-        """Open the file using its default application.
+    def dropData(self, data):
+        """Drop some data (directories and/or files) from a local file system to the remote host.
 
         Args:
-            path: the path of the file to be edited
+            data (list): the list of data to be transfered
         """
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
-        tempFile = tempfile.mktemp()
-        cmd = scp.SCPClient(sshSession.get_transport())
-        cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),path),tempFile, recursive=True)
-        try:
-            system = platform.system()
-            if system == 'Linux':
-                subprocess.call(['xdg-open',path])
-            elif system == 'Darwin':
-                subprocess.call(['open',path])
-            elif system == 'Windows':
-                subprocess.call(['start',path])
-        except Exception as e:
-            logging.error(str(e))
+        progressBar.reset(len(data))
+        for i, (d,_,_) in enumerate(data):
+            cmd = scp.SCPClient(sshSession.get_transport())
+            cmd.put(str(d), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+            progressBar.update(i+1)
+
+        self.setDirectory(self._currentDirectory)
 
     def favorites(self):
         """Return the favorites paths.
@@ -83,7 +76,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         for index in indexes:
             entry = self._entries[index]
             isDirectory = entry[2] == 'Folder'
-            entries.append((unixPathsJoin(self._currentDirectory,entry[0]),isDirectory,False))
+            entries.append((self._currentDirectory.joinpath(entry[0]),isDirectory,False))
 
         return entries
 
@@ -101,11 +94,59 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         entry = self._entries[row]
 
-        fullPath = unixNormPath(unixPathsJoin(self._currentDirectory,entry[0]))
+        fullPath = self._currentDirectory.joinpath(entry[0]).resolve()
         if entry[2] == 'Folder':
             self.setDirectory(fullPath)
         else:
             self.openFile(fullPath)
+
+    def openFile(self, path):
+        """Open the file using its default application.
+
+        Args:
+            path: the path of the file to be edited
+        """
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+
+        tempFile = tempfile.mktemp()
+        cmd = scp.SCPClient(sshSession.get_transport())
+        cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),str(path)),tempFile, recursive=True)
+        try:
+            system = platform.system()
+            if system == 'Linux':
+                subprocess.call(['xdg-open',tempFile])
+            elif system == 'Darwin':
+                subprocess.call(['open',tempFile])
+            elif system == 'Windows':
+                subprocess.call(['start',tempFile])
+        except Exception as e:
+            logging.error(str(e))
+
+    def pasteData(self, data):
+        """Paste data to this model.
+
+        Args
+            data (tuple): the data to paste
+        """
+
+        if data is None:
+            return
+
+        server, entries = data
+
+        if server != self._serverIndex.internalPointer().name():
+            return
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+
+        progressBar.reset(len(entries))
+        for i, (d,_,_) in enumerate(entries):
+            cmd = scp.SCPClient(sshSession.get_transport())
+            cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+            progressBar.update(i+1)
+
+        self.setDirectory(self._currentDirectory)
 
     def removeEntries(self, selectedRow):
         """Remove some entries of the model.
@@ -117,7 +158,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
         for row in selectedRow[::-1]:
-            selectedPath = unixPathsJoin(self._currentDirectory,self._entries[row][0])
+            selectedPath = self._currentDirectory.joinpath(self._entries[row][0])
             _, _, stderr = sshSession.exec_command('{} rm -rf {}'.format(self._serverIndex.internalPointer().name(), selectedPath))
             error = stderr.read().decode()
             if error:
@@ -145,9 +186,9 @@ class RemoteFileSystemModel(IFileSystemModel):
         
         self._entries[selectedRow][0] = newName
 
-        oldName = unixPathsJoin(self._currentDirectory,oldName)
-        newName = unixPathsJoin(self._currentDirectory,newName)
-        
+        oldName = self._currentDirectory.joinpath(oldName)
+        newName = self._currentDirectory.joinpath(newName)
+
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
         _, _, stderr = sshSession.exec_command('{} mv {} {}'.format(self._serverIndex.internalPointer().name(), oldName,newName))
@@ -204,20 +245,3 @@ class RemoteFileSystemModel(IFileSystemModel):
         self.layoutChanged.emit()
 
         self.currentDirectoryChangedSignal.emit(self._currentDirectory)
-
-    def transferData(self, data):
-        """Transfer some data (directories and/or files) from a local file system to the remote host.
-
-        Args:
-            data (list): the list of data to be transfered
-        """
-
-        sshSession = self._serverIndex.parent().internalPointer().sshSession()
-
-        progressBar.reset(len(data))
-        for i, (d,_,_) in enumerate(data):
-            cmd = scp.SCPClient(sshSession.get_transport())
-            cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
-            progressBar.update(i+1)
-
-        self.setDirectory(self._currentDirectory)

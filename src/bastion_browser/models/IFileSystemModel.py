@@ -1,9 +1,10 @@
 import abc
-import os
+import pathlib
 
 from PyQt5 import QtCore, QtGui
 
 import bastion_browser
+from bastion_browser.utils.Platform import iconsDirectory
 
 class MyMeta(abc.ABCMeta, type(QtCore.QAbstractTableModel)):
     pass
@@ -14,9 +15,11 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
     
     sections = ['Name','Size','Type','Owner','Date Modified']
 
-    addToFavoritesSignal = QtCore.pyqtSignal(str)
+    addToFavoritesSignal = QtCore.pyqtSignal(pathlib.PurePath)
 
-    currentDirectoryChangedSignal = QtCore.pyqtSignal(str)
+    currentDirectoryChangedSignal = QtCore.pyqtSignal(pathlib.PurePath)
+
+    dataCopiedSignal = QtCore.pyqtSignal(tuple)
 
     def __init__(self, serverIndex, startingDirectory, *args, **kwargs):
         """Constructor.
@@ -28,8 +31,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         super(IFileSystemModel,self).__init__(*args, **kwargs)
 
-        self._directoryIcon = QtGui.QIcon(os.path.join(bastion_browser.__path__[0],'icons','directory.png'))
-        self._fileIcon = QtGui.QIcon(os.path.join(bastion_browser.__path__[0],'icons','file.png'))
+        self._directoryIcon = QtGui.QIcon(str(iconsDirectory().joinpath('directory.png')))
+        self._fileIcon = QtGui.QIcon(str(iconsDirectory().joinpath('file.png')))
 
         self._entries = []
 
@@ -48,14 +51,14 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         entry = self._entries[selectedRow][0]
 
-        self.addToFavoritesSignal.emit(os.path.join(self._currentDirectory,entry))
+        self.addToFavoritesSignal.emit(self._currentDirectory.joinpath(entry))
 
     @abc.abstractmethod
     def createDirectory(self, directoryName):
         """Creates a directory.
 
         Args:
-            directoryName: the name of the directory
+            directoryName (pathlib.Path): the name of the directory
         """
 
         pass
@@ -69,11 +72,22 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         
         return 5
 
+    def copyData(self, selectedRows):
+        """Copy the data.
+
+        Args:
+            selectedRows (list of int): the row to copy
+        """
+
+        data = (self.server(),self.getEntries(selectedRows))
+
+        self.dataCopiedSignal.emit(data)
+
     def currentDirectory(self):
         """Returns the curren directory.
 
         Returns:
-            str: the path to the current directory
+            pathlib.Path: the path to the current directory
         """
 
         return self._currentDirectory
@@ -103,11 +117,11 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
             return self._currentDirectory
 
     @abc.abstractmethod
-    def openFile(self, path):
-        """Open the file using its default application.
+    def dropData(self, data):
+        """Drop some data (directories and/or files).
 
         Args:
-            path: the path of the file to be edited
+            data (list): the list of data to be transfered
         """
 
         pass
@@ -186,6 +200,26 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         pass
     
     @abc.abstractmethod
+    def openFile(self, path):
+        """Open the file using its default application.
+
+        Args:
+            path (pathlib.Path): the path of the file to be edited
+        """
+
+        pass
+
+    @abc.abstractmethod
+    def pasteData(self, data):
+        """Paste data to this model.
+
+        Args
+            data (tuple): the data to paste
+        """
+
+        pass
+
+    @abc.abstractmethod
     def removeEntries(self, path):
         """Remove some entries of the model.
 
@@ -258,12 +292,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         self._entries = sorted(self._entries, key=lambda x : (x[col] is not None, x[col]),reverse=order)
         self.layoutChanged.emit()
 
-    @abc.abstractmethod
-    def transferData(self, data):
-        """Transfer some data (directories and/or files).
-
-        Args:
-            data (list): the list of data to be transfered
+    def server(self):
+        """Returns the server that host the file system.
         """
-
-        pass
+        
+        return self._serverIndex.internalPointer().name()

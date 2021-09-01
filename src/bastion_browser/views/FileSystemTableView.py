@@ -1,5 +1,5 @@
 from genericpath import isdir
-import os
+import pathlib
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -61,11 +61,14 @@ class FileSystemTableView(QtWidgets.QTableView):
                 else:
                     links.append(str(url.toString()))
 
-            selectedData = [(l,os.path.isdir(l),True) for l in links]
+            selectedData = []
+            for l in links:
+                path = pathlib.Path(l)
+                selectedData.append((l,path.is_dir(),True))
         else:
             selectedRows = [index.row() for index in event.source().selectionModel().selectedRows()]
             selectedData = event.source().model().getEntries(selectedRows)
-        self.model().transferData(selectedData)
+        self.model().dropData(selectedData)
 
     def keyPressEvent(self, event):
         """Event triggered when user press a key of the keyboard.
@@ -81,6 +84,17 @@ class FileSystemTableView(QtWidgets.QTableView):
             selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
 
             self.model().removeEntries(selectedRows)
+
+        elif key == QtCore.Qt.Key_C and (event.modifiers() & QtCore.Qt.ControlModifier):
+            
+            selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
+
+            self.model().copyData(selectedRows)
+
+        elif key == QtCore.Qt.Key_V and (event.modifiers() & QtCore.Qt.ControlModifier):
+
+            mw = mainWindow(self)
+            self.model().pasteData(mw.copiedData())
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
@@ -131,7 +145,7 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         text, ok = QtWidgets.QInputDialog.getText(self, 'Rename Entry Dialog', 'Enter new name:')
         if ok and text.strip():
-            self.model().createDirectory(text.strip())
+            self.model().createDirectory(pathlib.Path(text.strip()))
 
     def onGoToFavorite(self, path):
         """Called when the user select one path among the favorites.
@@ -191,14 +205,17 @@ class FileSystemTableView(QtWidgets.QTableView):
         self._menu.removeAction(self._favoritesMenu.menuAction())
         self._favoritesMenu = QtWidgets.QMenu('Favorites')
 
-        if self.model().isDirectory(selectedRow):
-            self._addToFavoritesAction = self._favoritesMenu.addAction('Add to favorites')
-            self._addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
+        try:
+            if self.model().isDirectory(selectedRow):
+                self._addToFavoritesAction = self._favoritesMenu.addAction('Add to favorites')
+                self._addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
+        except IndexError:
+            pass
 
         self._gotoFavoritesMenu = QtWidgets.QMenu('Go to')
         favorites = self.model().favorites()
         for fav in favorites:
-            favAction = self._gotoFavoritesMenu.addAction(fav)
+            favAction = self._gotoFavoritesMenu.addAction(str(fav))
             favAction.triggered.connect(lambda item, f=fav : self.onGoToFavorite(f))
 
         self._favoritesMenu.addMenu(self._gotoFavoritesMenu)

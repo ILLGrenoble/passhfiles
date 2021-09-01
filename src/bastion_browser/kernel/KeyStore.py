@@ -10,13 +10,13 @@ class KeyStore(metaclass=SingletonMeta):
         """Constructor.
         """
 
-        self._keys = {'':None}
+        self._keys = {}
 
     def addKey(self, keyfile, key):
         """Add a key to the store.
 
         Args:
-            keyfile (str): the path to the key
+            keyfile (pathlib.Path): the path to the key
             key (paramiko key): the key
         """
 
@@ -30,7 +30,7 @@ class KeyStore(metaclass=SingletonMeta):
         """Returns whether or not the store contains a key.
 
         Args:
-            keyfile (str): the path to the key
+            keyfile (pathlib.Path): the path to the key
 
         Returns:
             bool: True if the store contains that key. False otherwise.
@@ -42,7 +42,7 @@ class KeyStore(metaclass=SingletonMeta):
         """Remove a key from the store.
 
         Args:
-            keyfile (str): the path to the key
+            keyfile (pathlib.Path): the path to the key
         """
 
         try:
@@ -55,12 +55,21 @@ class KeyStore(metaclass=SingletonMeta):
         """Returns the key from the store.
 
         Args:
-            keyfile (str): the path to the key
+            keyfile (pathlib.Path): the path to the key
 
         Returns:
             paramiko key: the key
         """
 
         return self._keys[keyfile]
+
+    def keys(self):
+        """Return the keys stored in the store.
+
+        Returns:
+            list of pathlib.Path: the keys
+        """
+
+        return list(self._keys.keys())
 
 KEYSTORE = KeyStore()

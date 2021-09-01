@@ -1,7 +1,8 @@
 from datetime import datetime
 import logging
-import os
+import pathlib
 import platform
+import re
 import shutil
 import subprocess
 
@@ -20,36 +21,41 @@ class LocalFileSystemModel(IFileSystemModel):
         """Creates a directory.
 
         Args:
-            directoryName: the name of the directory
+            directoryName (pathlib.Path): the name of the directory
         """
 
-        if not os.path.isabs(directoryName):
-            directoryName = os.path.join(self._currentDirectory,directoryName)
+        if not directoryName.is_absolute():
+            directoryName = self._currentDirectory.joinpath(directoryName)
 
         try:
-            os.makedirs(directoryName)
+            directoryName.mkdir()
         except Exception as e:
             logging.error(str(e))
         else:
             self.setDirectory(self._currentDirectory)
 
-    def openFile(self, path):
-        """Open the file using its default application.
+    def dropData(self, data):
+        """Drop some data (directories and/or files) from a remote host to the local file system.
 
         Args:
-            path: the path of the file to be edited
+            data (list): the list of data to be transfered
         """
 
-        try:
-            system = platform.system()
-            if system == 'Linux':
-                subprocess.call(['xdg-open',path])
-            elif system == 'Darwin':
-                subprocess.call(['open',path])
-            elif system == 'Windows':
-                subprocess.call(['start',path])
-        except Exception as e:
-            logging.error(str(e))
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+
+        progressBar.reset(len(data))
+        for i, (d,isDirectory,isLocal) in enumerate(data):
+            if isLocal:
+                if isDirectory:
+                    shutil.copytree(d,str(self._currentDirectory.joinpath(d.name)))
+                else:
+                    shutil.copy(d,self._currentDirectory)
+            else:
+                cmd = scp.SCPClient(sshSession.get_transport())
+                cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
+            progressBar.update(i+1)
+
+        self.setDirectory(self._currentDirectory)
 
     def favorites(self):
         """Return the favorites paths.
@@ -77,7 +83,7 @@ class LocalFileSystemModel(IFileSystemModel):
         for index in indexes:
             entry = self._entries[index]
             isDirectory = entry[2] == 'Folder'
-            entries.append((os.path.join(self._currentDirectory,entry[0]),isDirectory,True))
+            entries.append((self._currentDirectory.joinpath(entry[0]),isDirectory,True))
 
         return entries
 
@@ -95,11 +101,72 @@ class LocalFileSystemModel(IFileSystemModel):
 
         entry = self._entries[row]
 
-        fullPath = os.path.normpath(os.path.join(self._currentDirectory,entry[0]))
+        fullPath = self._currentDirectory.joinpath(entry[0]).resolve()
         if entry[2] == 'Folder':
             self.setDirectory(fullPath)
         else:
             self.openFile(fullPath)
+
+    def openFile(self, path):
+        """Open the file using its default application.
+
+        Args:
+            path: the path of the file to be edited
+        """
+
+        path = str(path)
+
+        try:
+            system = platform.system()
+            if system == 'Linux':
+                subprocess.call(['xdg-open',path])
+            elif system == 'Darwin':
+                subprocess.call(['open',path])
+            elif system == 'Windows':
+                subprocess.call(['start',path])
+        except Exception as e:
+            logging.error(str(e))
+
+    def pasteData(self, data):
+        """Paste data to this model.
+
+        Args
+            data (tuple): the data to paste
+        """
+
+        if data is None:
+            return
+
+        server, entries = data
+
+        if server != self._serverIndex.internalPointer().name():
+            return
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+
+        progressBar.reset(len(entries))
+        for i, (d,isDirectory,isLocal) in enumerate(entries):
+            target = self._currentDirectory.joinpath(d)
+            num = 1
+            while target.exists():
+                base = str(target.parent.joinpath(target.stem))
+                match = re.search('(.*)\(\d+\)',base)
+                if match is not None:
+                    base = match.groups(0)[0].strip()
+                target = '{} ({}){}'.format(base,num,target.suffix)
+                num += 1
+
+            if isLocal:
+                if isDirectory:
+                    shutil.copytree(d,target)
+                else:
+                    shutil.copy(d,target)
+            else:
+                cmd = scp.SCPClient(sshSession.get_transport())
+                cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),target, recursive=True)
+            progressBar.update(i+1)
+
+        self.setDirectory(self._currentDirectory)
 
     def removeEntries(self, selectedRows):
         """Remove some entries of the model.
@@ -109,11 +176,11 @@ class LocalFileSystemModel(IFileSystemModel):
         """
 
         for row in selectedRows[::-1]:
-            selectedPath = os.path.join(self._currentDirectory,self._entries[row][0])
-            if os.path.isdir(selectedPath):
-                shutil.rmtree(selectedPath)
+            selectedPath = self._currentDirectory.joinpath(self._entries[row][0])
+            if selectedPath.is_dir():
+                shutil.rmtree(str(selectedPath))
             else:
-                os.remove(selectedPath)
+                selectedPath.unlink()
 
         self.setDirectory(self._currentDirectory)
 
@@ -136,10 +203,10 @@ class LocalFileSystemModel(IFileSystemModel):
         
         self._entries[selectedRow][0] = newName
 
-        oldName = os.path.join(self._currentDirectory,oldName)
-        newName = os.path.join(self._currentDirectory,newName)
+        oldName = self._currentDirectory.joinpath(oldName)
+        newName = self._currentDirectory.joinpath(newName)
         
-        shutil.move(oldName,newName)
+        shutil.move(str(oldName),str(newName))
 
         self.layoutChanged.emit()
 
@@ -152,15 +219,15 @@ class LocalFileSystemModel(IFileSystemModel):
             directory (str): the directory
         """
 
-        if not os.path.isabs(directory):
-            directory = os.path.abspath(directory)
+        if not directory.is_absolute():
+            directory = directory.absolute()
         
         # If the input argument was a filename, get its base directory
-        if not os.path.isdir(directory):
-            directory = os.path.dirname(directory)
+        if directory.is_file():
+            directory = directory.parent
 
         try:
-            contents = os.listdir(directory)
+            contents = [v.name for v in directory.iterdir()]
         except PermissionError as e:
             logging.error(str(e))
             return
@@ -171,15 +238,15 @@ class LocalFileSystemModel(IFileSystemModel):
         self._currentDirectory = directory
 
         # Sort the contents of the directory (first the sorted directories and then the sorted files)
-        sortedContents = sorted([(c,True) for c in contents if os.path.isdir(os.path.join(self._currentDirectory,c))])
-        sortedContents += sorted([(c,False) for c in contents if not os.path.isdir(os.path.join(self._currentDirectory,c))])
+        sortedContents = sorted([(c,True) for c in contents if self._currentDirectory.joinpath(c).is_dir()])
+        sortedContents += sorted([(c,False) for c in contents if not self._currentDirectory.joinpath(c).is_dir()])
 
         self._entries = [['..',None,'Folder',None,None,self._directoryIcon]]
         for (name,isDirectory) in sortedContents:
-            absPath = os.path.join(self._currentDirectory,name)
-            size = None if isDirectory else sizeOf(os.path.getsize(absPath))
+            absPath = self._currentDirectory.joinpath(name).resolve()
+            size = None if isDirectory else sizeOf(absPath.lstat().st_size)
             typ = 'Folder' if isDirectory else 'File'
-            modificationTime = str(datetime.fromtimestamp(os.path.getmtime(absPath))).split('.')[0]
+            modificationTime = str(datetime.fromtimestamp(absPath.lstat().st_mtime)).split('.')[0]
             icon = self._directoryIcon if isDirectory else self._fileIcon
             owner = findOwner(absPath)
             self._entries.append([name,size,typ,owner,modificationTime,icon])
@@ -187,26 +254,3 @@ class LocalFileSystemModel(IFileSystemModel):
         self.layoutChanged.emit()
 
         self.currentDirectoryChangedSignal.emit(self._currentDirectory)
-
-    def transferData(self, data):
-        """Transfer some data (directories and/or files) from a remote host to the local file system.
-
-        Args:
-            data (list): the list of data to be transfered
-        """
-
-        sshSession = self._serverIndex.parent().internalPointer().sshSession()
-
-        progressBar.reset(len(data))
-        for i, (d,isDirectory,isLocal) in enumerate(data):
-            if isLocal:
-                if isDirectory:
-                    shutil.copytree(d,os.path.join(self._currentDirectory,os.path.basename(d)))
-                else:
-                    shutil.copy(d,self._currentDirectory)
-            else:
-                cmd = scp.SCPClient(sshSession.get_transport())
-                cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
-            progressBar.update(i+1)
-
-        self.setDirectory(self._currentDirectory)

@@ -4,7 +4,11 @@ import logging
 import paramiko
 
 def checkAndGetSSHKey(keyfile,keytype,password):
-    """
+    """Check and returns the SSH key.
+
+    Args:
+        keyfile (pathlib.Path): the path to the private key
+        password (str): the password (if any)
     """
 
     if keytype == 'RSA':
@@ -18,7 +22,7 @@ def checkAndGetSSHKey(keyfile,keytype,password):
         return False, None
 
     try:
-        f = open(keyfile,'r')
+        f = open(str(keyfile),'r')
         s = f.read()
         f.close()
         keyfile = io.StringIO(s)

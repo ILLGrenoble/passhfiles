@@ -1,6 +1,6 @@
 import os
+import pathlib
 import platform
-import re
 
 import bastion_browser
 
@@ -119,7 +119,7 @@ if platform.system() == 'Windows':
         # N.B. This query may fail with ERROR_INVALID_FUNCTION
         # for some filesystems.
         pSD = PSECURITY_DESCRIPTOR(needs_free=True)
-        error = advapi32.GetNamedSecurityInfoW(filename, SE_FILE_OBJECT, request,
+        error = advapi32.GetNamedSecurityInfoW(str(filename), SE_FILE_OBJECT, request,
                     ctypes.byref(pSD.pOwner), ctypes.byref(pSD.pGroup),
                     ctypes.byref(pSD.pDacl), ctypes.byref(pSD.pSacl),
                     ctypes.byref(pSD))
@@ -136,34 +136,39 @@ if platform.system() == 'Windows':
             return userInfo[0]
 
     def homeDirectory():
-        return os.environ['USERPROFILE']
+        return pathlib.Path(os.environ['USERPROFILE'])
 
 else:
 
     def findOwner(filename):
-        import pwd
-        return pwd.getpwuid(os.stat(filename).st_uid).pw_name
+        """Retrieve the owner of a given file.
 
-    def homeDirectory():
-        return os.environ['HOME']
+        Args:
+            filename (pathlib.Path): the file
+        """
+        import pwd
+        return pwd.getpwuid(filename.lstat().st_uid).pw_name
+
+    def homeDirectory():        
+        return pathlib.Path(os.environ['HOME'])
 
 def applicationSettingsDirectory(create=True):
     """Returns (and creates if it does not exists) the application settings directory.
 
     Returns:
-        str: the application settings directory
+        pathlib.Path: the application settings directory
     """
 
     system = platform.system()
 
     if system in ['Linux','Darwin']:
-        basedir = os.path.join(os.environ['HOME'], '.bastion_browser')
+        basedir = pathlib.Path(os.environ['HOME']).joinpath('.bastion_browser')
     else:
-        basedir = os.path.join(os.environ['APPDATA'], 'bastion_browser')
+        basedir = pathlib.Path(os.environ['APPDATA']).joinpath('bastion_browser')
     
     # If the application directory does not exist, create it.
-    if create and not os.path.exists(basedir):
-        os.makedirs(basedir)
+    if create and not basedir.exists():
+        basedir.mkdir()
     
     return basedir
 
@@ -171,79 +176,35 @@ def applicationKeyPath():
     """Return the path to the application key file.
 
     Returns:
-        str: the path to the application key file
+        pathlib.Path: the path to the application key file
     """
 
-    return os.path.join(applicationSettingsDirectory(),'application_key.yml')
+    return applicationSettingsDirectory().joinpath('application_key.yml')
 
 def iconsDirectory():
     """Returns the path to the icons directory.
 
     Returns:
-        str: the icons directory path
+        pathlib.Path: the icons directory path
     """
 
-    return os.path.join(applicationDirectory(),'icons')
+    return applicationDirectory().joinpath('icons')
 
 def sessionsDatabasePath():
     """Returns the path to the sessions file.
 
     Returns:
-        str: the path to the sessions file
+        pathlib.Path: the path to the sessions file
     """
 
-    return os.path.join(applicationSettingsDirectory(),'sessions.yml')
+    return applicationSettingsDirectory().joinpath('sessions.yml')
 
 def applicationDirectory():
     """Returns the path to the application base directory.
 
     Returns:
-        str: the path to the application base directory
+        pathlib.Path: the path to the application base directory
     """
 
-    return bastion_browser.__path__[0]
+    return pathlib.Path(bastion_browser.__path__[0])
 
-def unixPathsJoin(*args):
-    """Equivalent of os.path.join for unix system.
-    """
-
-    path = '/'.join(args)
-
-    path = re.sub('/+','/',path)
-    return path
-
-def unixNormPath(path):
-    """Normalize path, eliminating double slashes, etc."""
-    if isinstance(path, bytes):
-        sep = b'/'
-        empty = b''
-        dot = b'.'
-        dotdot = b'..'
-    else:
-        sep = '/'
-        empty = ''
-        dot = '.'
-        dotdot = '..'
-    if path == empty:
-        return dot
-    initial_slashes = path.startswith(sep)
-    # POSIX allows one or two initial slashes, but treats three or more
-    # as single slash.
-    if (initial_slashes and
-        path.startswith(sep*2) and not path.startswith(sep*3)):
-        initial_slashes = 2
-    comps = path.split(sep)
-    new_comps = []
-    for comp in comps:
-        if comp in (empty, dot):
-            continue
-        if (comp != dotdot or (not initial_slashes and not new_comps) or
-             (new_comps and new_comps[-1] == dotdot)):
-            new_comps.append(comp)
-        elif new_comps:
-            new_comps.pop()
-    comps = new_comps
-    path = sep.join(comps)
-    if initial_slashes:
-        path = sep*initial_slashes + path
-    return path or dot

@@ -1,5 +1,3 @@
-import os
-
 from PyQt5 import QtGui, QtWidgets
 
 from bastion_browser.__pkginfo__ import __version__
@@ -26,7 +24,7 @@ class AboutDialog(QtWidgets.QDialog):
         """Setup the dialog.
         """
 
-        pixmap = QtGui.QPixmap(os.path.join(iconsDirectory(),'bastion_browser.png'))
+        pixmap = QtGui.QPixmap(str(iconsDirectory()/'bastion_browser.png'))
         pixmap = pixmap.scaled(180,180)
         label = QtWidgets.QLabel()
         label.setPixmap(pixmap)
