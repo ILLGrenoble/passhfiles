@@ -122,6 +122,11 @@ class FileSystemTableView(QtWidgets.QTableView):
         self._openConnection = None
         self._menu.addAction(self._openAction)
 
+        self._reloadAction = self._menu.addAction('Reload')
+        self._reloadAction.triggered.connect(self.onReloadDirectory)
+        self._reloadConnection = None
+        self._menu.addAction(self._openAction)
+
         self._menu.addSeparator()
 
         self._favoritesMenu = QtWidgets.QMenu('Favorites')
@@ -166,6 +171,12 @@ class FileSystemTableView(QtWidgets.QTableView):
         """
 
         self.model().onOpenEntry(selectedIndex)
+
+    def onReloadDirectory(self):
+        """Refresh the directory.
+        """
+
+        self.model().reloadDirectory()
 
     def onRenameEntry(self, selectedRow):
         """Called when the user rename one entry.

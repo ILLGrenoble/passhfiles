@@ -219,6 +219,12 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         pass
 
+    def reloadDirectory(self):
+        """Reload the directory.
+        """
+
+        self.setDirectory(self._currentDirectory)
+
     @abc.abstractmethod
     def removeEntries(self, path):
         """Remove some entries of the model.
