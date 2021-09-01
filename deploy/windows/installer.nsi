@@ -12,18 +12,18 @@
 !endif
 
 ; The name of the installer
-Name "bastion_browser ${VERSION}"
+Name "passhfiles ${VERSION}"
 
 ; The name of the installer file to write
-OutFile "${TARGET_DIR}\bastion_browser-${VERSION}-${ARCH}.exe"
+OutFile "${TARGET_DIR}\passhfiles-${VERSION}-${ARCH}.exe"
 
 RequestExecutionLevel admin #NOTE: You still need to check user rights with UserInfo!
 
 ; The default installation directory
-InstallDir "$PROGRAMFILES\ILL\bastion_browser"
+InstallDir "$PROGRAMFILES\ILL\passhfiles"
 
 ; Registry key to check for directory (so if you install again, it will overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\ILL\bastion_browser" "Install_Dir"
+InstallDirRegKey HKLM "Software\ILL\passhfiles" "Install_Dir"
 
 ; Will show the details of installation
 ShowInstDetails show
@@ -32,8 +32,8 @@ ShowInstDetails show
 ShowUnInstDetails show
 
 !define PUBLISHER "ILL"
-!define WEB_SITE "https://code.ill.fr/si/python-projects/bastion-browser"
-!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\bastion_browser"
+!define WEB_SITE "https://code.ill.fr/si/python-projects/passhfiles"
+!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\passhfiles"
 !define UNINST_ROOT_KEY "HKLM"
 
 !define ICONS_DIR $INSTDIR\icons
@@ -42,16 +42,16 @@ ShowUnInstDetails show
 !define MUI_ABORTWARNING
 
 ; define the icon for the installer file and the installer 'bandeau'
-!define MUI_ICON   "icons\bastion_browser.ico"
-!define MUI_UNICON "icons\bastion_browser_uninstall.ico"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "icons\bastion_browser_resized.bmp"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "icons\bastion_browser_uninstall_resized.bmp"
+!define MUI_ICON   "icons\passhfiles.ico"
+!define MUI_UNICON "icons\passhfiles_uninstall.ico"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "icons\passhfiles_resized.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "icons\passhfiles_uninstall_resized.bmp"
 
 !define WEB_ICON   "icons\website.ico"
 
 !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of \
-bastion_browser release ${VERSION}.\
-\n\nbastion_browser is a program for browsing servers behind a bastion server."
+passhfiles release ${VERSION}.\
+\n\npasshfiles is a program for browsing servers behind a passhport server."
 
 ; Insert a "Welcome" page in the installer
 !insertmacro MUI_PAGE_WELCOME
@@ -62,12 +62,12 @@ bastion_browser release ${VERSION}.\
 ; Insert a page to browse for the installation directory
 !insertmacro MUI_PAGE_DIRECTORY
 
-; Insert a page for actual installation (+display) of bastion_browser
+; Insert a page for actual installation (+display) of passhfiles
 !insertmacro MUI_PAGE_INSTFILES
 
-; Insert in the finish page the possibility to run bastion_browser
+; Insert in the finish page the possibility to run passhfiles
 !define MUI_FINISHPAGE_RUN_NOTCHECKED
-!define MUI_FINISHPAGE_RUN_TEXT "Start bastion_browser ${VERSION}"
+!define MUI_FINISHPAGE_RUN_TEXT "Start passhfiles ${VERSION}"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\launcher.bat"
 ; Insert in the finish page the possibility to view the changelog
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "View CHANGELOG"
@@ -86,13 +86,13 @@ bastion_browser release ${VERSION}.\
 
 Function .onInit
   ${If} ${ARCH} == "win-amd64"
-    StrCpy $INSTDIR "$PROGRAMFILES64\ILL\bastion_browser"
+    StrCpy $INSTDIR "$PROGRAMFILES64\ILL\passhfiles"
   ${Else}
-    StrCpy $INSTDIR "$PROGRAMFILES\ILL\bastion_browser"
+    StrCpy $INSTDIR "$PROGRAMFILES\ILL\passhfiles"
   ${EndIf}
 FunctionEnd
 
-Section "bastion_browser ${VERSION}" SEC01
+Section "passhfiles ${VERSION}" SEC01
   SetShellVarContext all
   SetOutPath "$INSTDIR"
   SetOverwrite on
@@ -108,14 +108,14 @@ Section "bastion_browser ${VERSION}" SEC01
   File /oname=web.ico "${WEB_ICON}"
   SetOutPath "$INSTDIR"
   SetOverwrite on
-  CreateShortCut "$DESKTOP\bastion_browser.lnk" "$INSTDIR\launcher.bat" "" "${ICONS_DIR}\run.ico" 0
-  CreateDirectory "$SMPROGRAMS\ILL\bastion_browser"
-  CreateShortCut "$SMPROGRAMS\ILL\bastion_browser\bastion_browser.lnk" "$INSTDIR\launcher.bat" "" "${ICONS_DIR}\run.ico" 0
-  WriteIniStr "$INSTDIR\bastion_browser.url" "InternetShortcut" "URL" "${WEB_SITE}"
-  CreateShortCut "$SMPROGRAMS\ILL\bastion_browser\Website.lnk" "$INSTDIR\bastion_browser.url" "" "${ICONS_DIR}\web.ico" 0
-  CreateShortCut "$SMPROGRAMS\ILL\bastion_browser\Uninstall.lnk" "$INSTDIR\uninst.exe" "" "${ICONS_DIR}\uninstall.ico" 0
+  CreateShortCut "$DESKTOP\passhfiles.lnk" "$INSTDIR\launcher.bat" "" "${ICONS_DIR}\run.ico" 0
+  CreateDirectory "$SMPROGRAMS\ILL\passhfiles"
+  CreateShortCut "$SMPROGRAMS\ILL\passhfiles\passhfiles.lnk" "$INSTDIR\launcher.bat" "" "${ICONS_DIR}\run.ico" 0
+  WriteIniStr "$INSTDIR\passhfiles.url" "InternetShortcut" "URL" "${WEB_SITE}"
+  CreateShortCut "$SMPROGRAMS\ILL\passhfiles\Website.lnk" "$INSTDIR\passhfiles.url" "" "${ICONS_DIR}\web.ico" 0
+  CreateShortCut "$SMPROGRAMS\ILL\passhfiles\Uninstall.lnk" "$INSTDIR\uninst.exe" "" "${ICONS_DIR}\uninstall.ico" 0
 
-  WriteRegStr ${UNINST_ROOT_KEY} "${UNINST_KEY}" "DisplayName" "bastion_browser"
+  WriteRegStr ${UNINST_ROOT_KEY} "${UNINST_KEY}" "DisplayName" "passhfiles"
   WriteRegStr ${UNINST_ROOT_KEY} "${UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe"
   WriteRegStr ${UNINST_ROOT_KEY} "${UNINST_KEY}" "DisplayIcon" "${ICONS_DIR}\run.ico"
   WriteRegStr ${UNINST_ROOT_KEY} "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
@@ -128,13 +128,13 @@ SectionEnd
 
 Function un.onInit
   !insertmacro MUI_UNGETLANGUAGE
-  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you really sure you want to uninstall bastion_browser ?" IDYES +2
+  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you really sure you want to uninstall passhfiles ?" IDYES +2
   Abort
 FunctionEnd
 
 Section uninstall
   SetShellVarContext all
-  Delete "$INSTDIR\bastion_browser.url"
+  Delete "$INSTDIR\passhfiles.url"
   Delete "$INSTDIR\python.exe"
   Delete "$INSTDIR\uninst.exe"
   Delete "$INSTDIR\LICENSE"
@@ -151,12 +151,12 @@ Section uninstall
   Delete "${ICONS_DIR}\vcruntime140.dll"
   Delete "${ICONS_DIR}\vcruntime140_1.dll"
 
-  Delete "$DESKTOP\bastion_browser.lnk"
+  Delete "$DESKTOP\passhfiles.lnk"
 
-  Delete "$SMPROGRAMS\ILL\bastion_browser\Uninstall.lnk"
-  Delete "$SMPROGRAMS\ILL\bastion_browser\Website.lnk"
-  Delete "$SMPROGRAMS\ILL\bastion_browser\bastion_browser.lnk"
-  RMDir /r "$SMPROGRAMS\ILL\bastion_browser"
+  Delete "$SMPROGRAMS\ILL\passhfiles\Uninstall.lnk"
+  Delete "$SMPROGRAMS\ILL\passhfiles\Website.lnk"
+  Delete "$SMPROGRAMS\ILL\passhfiles\passhfiles.lnk"
+  RMDir /r "$SMPROGRAMS\ILL\passhfiles"
   RMDir /r "$INSTDIR"
 
   DeleteRegKey ${UNINST_ROOT_KEY} "${UNINST_KEY}"

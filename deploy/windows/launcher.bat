@@ -7,4 +7,4 @@ set PYTHONPATH=
 
 set dirname="%~dp0"
 
-start /B /D %dirname% pythonw.exe Scripts\bastion_browser
+start /B /D %dirname% pythonw.exe Scripts\passhfiles

@@ -7,7 +7,7 @@ script:
   # Make icons dirs
   - mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps/
   # Copy the icon to icons dir
-  - cp ../../src/bastion_browser/icons/bastion_browser_256.png AppDir/usr/share/icons/hicolor/256x256/apps/bastion_browser.png
+  - cp ../../src/passhfiles/icons/passhfiles_256.png AppDir/usr/share/icons/hicolor/256x256/apps/passhfiles.png
   # Make bin dirs
   - mkdir -p AppDir/usr/bin
   # Install application dependencies
@@ -18,13 +18,13 @@ AppDir:
 
   app_info:
     id: Institut Laue Langevin
-    name: bastion_browser
-    icon: bastion_browser
+    name: passhfiles
+    icon: passhfiles
     version: 1.0.0
     # Set the python executable as entry point
     exec: usr/bin/python3
     # Set the application main script path as argument. Use '$@' to forward CLI parameters
-    exec_args: "$APPDIR/usr/bin/bastion_browser"
+    exec_args: "$APPDIR/usr/bin/passhfiles"
 
   apt:
     arch: amd64

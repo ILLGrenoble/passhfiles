@@ -1,4 +1,5 @@
 build
+build_
 dist
 *egg-info*
 __pycache__
@@ -7,4 +8,4 @@ __pycache__
 .eggs
 AppDir
 appimage-builder-cache
-bastion_browser*AppImage*
+passhfiles*AppImage*

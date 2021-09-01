@@ -18,13 +18,13 @@
 # -- Project information -----------------------------------------------------
 
 import pkg_resources
-project = 'bastion_browser'
+project = 'passhfiles'
 copyright = '2021, Pellegrini'
 author = 'Pellegrini'
 
 # The full version, including alpha/beta/rc tags
 
-version = pkg_resources.get_distribution('bastion_browser').version
+version = pkg_resources.get_distribution('passhfiles').version
 
 release = version
 
@@ -58,4 +58,4 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_logo = '_static/bastion_browser.png'
+html_logo = '_static/passhfiles.png'

@@ -4,14 +4,14 @@ import os
 from setuptools import find_packages, setup
 
 package_info = {}
-exec(open("src/bastion_browser/__pkginfo__.py").read(), {}, package_info)
+exec(open("src/passhfiles/__pkginfo__.py").read(), {}, package_info)
 
 with open('requirements.txt', 'r') as fin:
     install_requires = fin.readlines()
 
 scripts = glob.glob(os.path.join('scripts', '*'))
 
-setup(name="bastion_browser",
+setup(name="passhfiles",
       version=package_info["__version__"],
       description=package_info["__description__"],
       long_description=package_info["__long_description__"],
