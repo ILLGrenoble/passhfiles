@@ -45,14 +45,18 @@ class LocalFileSystemModel(IFileSystemModel):
 
         progressBar.reset(len(data))
         for i, (d,isDirectory,isLocal) in enumerate(data):
-            if isLocal:
-                if isDirectory:
-                    shutil.copytree(d,str(self._currentDirectory.joinpath(d.name)))
+            try:
+                if isLocal:
+                    if isDirectory:
+                        shutil.copytree(d,str(self._currentDirectory.joinpath(d.name)))
+                    else:
+                        shutil.copy(d,self._currentDirectory)
                 else:
-                    shutil.copy(d,self._currentDirectory)
-            else:
-                cmd = scp.SCPClient(sshSession.get_transport())
-                cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
+                    cmd = scp.SCPClient(sshSession.get_transport())
+                    cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
+            except Exception as e:
+                logging.error(str(e))
+                pass
             progressBar.update(i+1)
 
         self.setDirectory(self._currentDirectory)
@@ -156,14 +160,18 @@ class LocalFileSystemModel(IFileSystemModel):
                 target = '{} ({}){}'.format(base,num,target.suffix)
                 num += 1
 
-            if isLocal:
-                if isDirectory:
-                    shutil.copytree(d,target)
+            try:
+                if isLocal:
+                    if isDirectory:
+                        shutil.copytree(d,target)
+                    else:
+                        shutil.copy(d,target)
                 else:
-                    shutil.copy(d,target)
-            else:
-                cmd = scp.SCPClient(sshSession.get_transport())
-                cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),target, recursive=True)
+                    cmd = scp.SCPClient(sshSession.get_transport())
+                    cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),target, recursive=True)
+            except Exception as e:
+                logging.error(str(e))
+                pass
             progressBar.update(i+1)
 
         self.setDirectory(self._currentDirectory)

@@ -44,8 +44,12 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         progressBar.reset(len(data))
         for i, (d,_,_) in enumerate(data):
-            cmd = scp.SCPClient(sshSession.get_transport())
-            cmd.put(str(d), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+            try:
+                cmd = scp.SCPClient(sshSession.get_transport())
+                cmd.put(str(d), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+            except Exception as e:
+                logging.error(str(e))
+                pass
             progressBar.update(i+1)
 
         self.setDirectory(self._currentDirectory)
@@ -113,10 +117,13 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
-        tempFile = tempfile.mktemp()
-        cmd = scp.SCPClient(sshSession.get_transport())
-        cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),str(path)),tempFile, recursive=True)
+        if sshSession is None:
+            return
+                
         try:
+            tempFile = tempfile.mktemp()        
+            cmd = scp.SCPClient(sshSession.get_transport())
+            cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),str(path)),tempFile, recursive=True)
             system = platform.system()
             if system == 'Linux':
                 subprocess.call(['xdg-open',tempFile])
