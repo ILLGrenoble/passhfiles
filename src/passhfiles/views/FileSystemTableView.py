@@ -176,7 +176,11 @@ class FileSystemTableView(QtWidgets.QTableView):
         """Refresh the directory.
         """
 
-        self.model().reloadDirectory()
+        fileSystemModel = self.model()
+        if fileSystemModel is None:
+            return
+
+        fileSystemModel.reloadDirectory()
 
     def onRenameEntry(self, selectedRow):
         """Called when the user rename one entry.
