@@ -87,11 +87,11 @@ class LocalFileSystemModel(IFileSystemModel):
 
         return entries
 
-    def onEnterDirectory(self, index):
+    def onOpenEntry(self, index):
         """Called when the user double clicks on a model's entry. 
         
         The entry can be a directory or a file. In case of a folder, the folder will be entered in and in 
-        case of a file, the file will be opened in a text editor.
+        case of a file, the file will be opened its default application.
 
         Args:
             index (QtCore.QModelIndex): the index of the entry
@@ -150,7 +150,7 @@ class LocalFileSystemModel(IFileSystemModel):
             num = 1
             while target.exists():
                 base = str(target.parent.joinpath(target.stem))
-                match = re.search('(.*)\(\d+\)',base)
+                match = re.search('(.*)_\d+',base)
                 if match is not None:
                     base = match.groups(0)[0].strip()
                 target = '{} ({}){}'.format(base,num,target.suffix)

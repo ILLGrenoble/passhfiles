@@ -248,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._localFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
         self._localFileSystemLabel.setText('Local filesystem ({})'.format(localFileSystemModel.currentDirectory()))
 
-        remoteFileSystemModel = RemoteFileSystemModel(serverIndex, pathlib.Path('/'))
+        remoteFileSystemModel = RemoteFileSystemModel(serverIndex, pathlib.PurePosixPath('/'))
         self._remoteFileSystem.setModel(remoteFileSystemModel)
         self._remoteFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
         self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(remoteFileSystemModel.currentDirectory()))
@@ -287,7 +287,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """
 
         self._copiedData = data
-        print(self._copiedData)
 
     def onUpdateLabel(self, label, currentDirectory):
         """Update the label on top of the file system with the current directory.

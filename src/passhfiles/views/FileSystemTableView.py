@@ -165,7 +165,7 @@ class FileSystemTableView(QtWidgets.QTableView):
         """Called when the user open an entry.
         """
 
-        self.model().onEnterDirectory(selectedIndex)
+        self.model().onOpenEntry(selectedIndex)
 
     def onRenameEntry(self, selectedRow):
         """Called when the user rename one entry.
@@ -241,4 +241,4 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         super(FileSystemTableView,self).setModel(model)
 
-        self.doubleClicked.connect(self.model().onEnterDirectory)
+        self.doubleClicked.connect(self.model().onOpenEntry)

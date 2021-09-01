@@ -80,21 +80,25 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         return entries
 
-    def onEnterDirectory(self, index):
+    def onOpenEntry(self, index):
         """Called when the user double clicks on a model's entry. 
         
         The entry can be a directory or a file. In case of a folder, the folder will be entered in and in 
-        case of a file, the file will be opened in a text editor.
+        case of a file, the file will be opened with its default application.
 
         Args:
-            index (QtCore.QModelIndex): the index of the entry
+            index (PyQt5.QtCore.QModelIndex): the index of the entry
         """
 
         row = index.row()
 
         entry = self._entries[row]
 
-        fullPath = self._currentDirectory.joinpath(entry[0]).resolve()
+        if entry[0] == '..':
+            fullPath = self._currentDirectory.parent
+        else:
+            fullPath = self._currentDirectory.joinpath(entry[0])
+
         if entry[2] == 'Folder':
             self.setDirectory(fullPath)
         else:
@@ -140,10 +144,23 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
+        currentSubEntries = [entry[0] for entry in self._entries]
         progressBar.reset(len(entries))
         for i, (d,_,_) in enumerate(entries):
-            cmd = scp.SCPClient(sshSession.get_transport())
-            cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+
+            target = d.name
+            ext = d.suffix
+            num = 1
+            while target in currentSubEntries:
+                target = '{}_{}{}'.format(d.stem,num,ext)
+                num += 1
+
+            try:
+                cmd = scp.SCPClient(sshSession.get_transport())
+                cmd.put(d, remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),str(self._currentDirectory.joinpath(target))), recursive=True)
+            except Exception as e:
+                logging.error(str(e))
+                pass
             progressBar.update(i+1)
 
         self.setDirectory(self._currentDirectory)
