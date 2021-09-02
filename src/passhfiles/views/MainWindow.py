@@ -177,9 +177,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._splitter.setStretchFactor(1,2)
         self._splitter.setStretchFactor(2,2)
 
-        logger = LoggerWidget(self)
-        logger.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        logging.getLogger().addHandler(logger)
+        self._logger = LoggerWidget(self)
+        self._logger.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(self._logger)
         logging.getLogger().setLevel(logging.INFO)
 
         self.setCentralWidget(self._mainFrame)
@@ -187,7 +187,7 @@ class MainWindow(QtWidgets.QMainWindow):
         mainLayout = QtWidgets.QVBoxLayout()
 
         mainLayout.addWidget(self._splitter, stretch=4)
-        mainLayout.addWidget(logger.widget, stretch=1)
+        mainLayout.addWidget(self._logger.widget(), stretch=1)
 
         self.setGeometry(0, 0, 1400, 800)
 
@@ -200,6 +200,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show()
 
         self._sessionsTreeView.openBrowsersSignal.connect(self.onOpenBrowsers)
+
+        self._logger.sendLog.connect(self.onDisplayLogMessage)
+
+    def onDisplayLogMessage(self, msg):
+        """Display the log message in the logger.
+
+        Args:
+            msg (str): the message
+        """
+
+        self._logger.widget().appendPlainText(msg)
 
     def loadSessions(self):
         """Load the sessions.

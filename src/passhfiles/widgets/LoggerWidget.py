@@ -1,6 +1,6 @@
 import logging
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 class _EnhancedTextEdit(QtWidgets.QPlainTextEdit):
 
@@ -36,8 +36,10 @@ class _EnhancedTextEdit(QtWidgets.QPlainTextEdit):
         with open(filename, 'w') as fin:
             fin.write(self.toPlainText())
 
-class LoggerWidget(logging.Handler):
+class LoggerWidget(QtCore.QObject,logging.Handler):
     
+    sendLog = QtCore.pyqtSignal(str)
+
     def __init__(self, parent):
         """Constructor.
         """
@@ -54,9 +56,9 @@ class LoggerWidget(logging.Handler):
         """
 
         msg = self.format(record)
-        self._widget.appendPlainText(msg)
 
-    @property
+        self.sendLog.emit(msg)
+
     def widget(self):
         """Return the underlying widget used for displaying the log.
 
