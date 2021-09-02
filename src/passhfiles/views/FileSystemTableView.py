@@ -148,7 +148,7 @@ class FileSystemTableView(QtWidgets.QTableView):
         if self.model() is None:
             return
 
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Rename Entry Dialog', 'Enter new name:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Create Directory Dialog', 'Enter new name:')
         if ok and text.strip():
             self.model().createDirectory(pathlib.Path(text.strip()))
 
