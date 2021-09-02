@@ -168,10 +168,6 @@ class SessionsTreeView(QtWidgets.QTreeView):
         terminal on the remote location. 
         """
 
-        if platform.system() == 'Windows':
-            logging.warning('Functionnality not yet available on Windows')
-            return
-
         sessionsModel = self.model()
         serverIndex = self.currentIndex()
         sessionsModel.openTerminal(serverIndex)

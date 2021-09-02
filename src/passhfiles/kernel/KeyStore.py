@@ -12,19 +12,20 @@ class KeyStore(metaclass=SingletonMeta):
 
         self._keys = {}
 
-    def addKey(self, keyfile, key):
+    def addKey(self, keyfile, key, password):
         """Add a key to the store.
 
         Args:
             keyfile (pathlib.Path): the path to the key
             key (paramiko key): the key
+            password (str): the password (if any)
         """
 
         if keyfile in self._keys:
             logging.warning('The key store already contains {} key'.format(keyfile))
             return
 
-        self._keys[keyfile] = key
+        self._keys[keyfile] = (key,password)
 
     def hasKey(self, keyfile):
         """Returns whether or not the store contains a key.
@@ -61,7 +62,19 @@ class KeyStore(metaclass=SingletonMeta):
             paramiko key: the key
         """
 
-        return self._keys[keyfile]
+        return self._keys[keyfile][0]
+
+    def getPassword(self, keyfile):
+        """Returns the key from the store.
+
+        Args:
+            keyfile (pathlib.Path): the path to the key
+
+        Returns:
+            str: the password
+        """
+
+        return self._keys[keyfile][1]
 
     def keys(self):
         """Return the keys stored in the store.

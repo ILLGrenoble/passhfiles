@@ -2,7 +2,9 @@ import collections
 import logging
 import platform
 import paramiko
+import pathlib
 import subprocess
+import tempfile
 import time
 
 import yaml
@@ -642,10 +644,27 @@ class SessionsModel(QtCore.QAbstractItemModel):
         sessionData = sessionNode.data(0)
 
         system = platform.system()
-        if system == 'Linux':
-            subprocess.Popen(['xterm','-e','ssh {}@{} {}'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        elif system == 'Darwin': 
-            subprocess.Popen(['osascript','-e','tell app "Terminal" to do script "ssh {}@{} {}"'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        try:
+            if system == 'Linux':
+                subprocess.Popen(['xterm','-e','ssh {}@{} {}'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            elif system == 'Darwin': 
+                subprocess.Popen(['osascript','-e','tell app "Terminal" to do script "ssh {}@{} {}"'.format(sessionData['user'],sessionData['address'],serverName)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            elif system == 'Windows':
+                user = sessionData['user']
+                address = sessionData['address']
+                keyfile = sessionData['key']
+                ppkFile = keyfile.parent.joinpath(keyfile.stem +'.ppk')
+                if not ppkFile.exists():
+                    logging.error('Can not find the {} ppk file'.format(ppkFile))
+                    return
+                password = KEYSTORE.getPassword(keyfile)
+                cmdFile = pathlib.Path(tempfile.mktemp()).resolve()
+                with open(cmdFile,'w') as fout:
+                    fout.write(serverName)
+                puttyCmd = ['putty','-l',user,'-i',ppkFile,'-m',cmdFile,'-pw',password,address]
+                subprocess.Popen(puttyCmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        except Exception as e:
+            logging.error(str(e))
 
     def parent(self, index):
         """Return the parent index of a given index.
@@ -681,9 +700,10 @@ class SessionsModel(QtCore.QAbstractItemModel):
                 if not ok:
                     return                
                 
-                success,key = checkAndGetSSHKey(keyfile,keytype,password.strip())
+                password = password.strip()
+                success,key = checkAndGetSSHKey(keyfile,keytype,password)
                 if success:
-                    KEYSTORE.addKey(keyfile,key)
+                    KEYSTORE.addKey(keyfile,key,password)
                     logging.info('Successfully unlocked {} key'.format(keyfile))
                 else:
                     logging.error('Invalid password for unlocking {} key'.format(keyfile))
