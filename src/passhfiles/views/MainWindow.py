@@ -8,7 +8,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from passhfiles.dialogs.AboutDialog import AboutDialog
 from passhfiles.dialogs.KeysManagerDialog import KeysManagerDialog
-from passhfiles.kernel.Thread import RefreshFileSystemWorker
 from passhfiles.models.LocalFileSystemModel import LocalFileSystemModel
 from passhfiles.models.RemoteFileSystemModel import RemoteFileSystemModel
 from passhfiles.utils.Platform import homeDirectory, iconsDirectory, sessionsDatabasePath
@@ -37,13 +36,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkSSHAgent()
 
         self._copiedData = None
-
-        self._refreshThread = QtCore.QThread()
-        self._refreshWorker = RefreshFileSystemWorker()
-        self._refreshWorker.moveToThread(self._refreshThread)
-        self._refreshThread.started.connect(self._refreshWorker.run)
-        self._refreshWorker.updateFileSystems.connect(self.onReloadFileSystems)
-        self._refreshThread.start()
 
     def onReloadFileSystems(self):
 
