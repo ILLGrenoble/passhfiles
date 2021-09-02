@@ -118,7 +118,7 @@ class LocalFileSystemModel(IFileSystemModel):
             path: the path of the file to be edited
         """
 
-        path = str(path)
+        path = str(path.resolve())
 
         try:
             system = platform.system()
@@ -127,7 +127,7 @@ class LocalFileSystemModel(IFileSystemModel):
             elif system == 'Darwin':
                 subprocess.call(['open',path])
             elif system == 'Windows':
-                subprocess.call(['start',path])
+                subprocess.call(['start',path],shell=True)
         except Exception as e:
             logging.error(str(e))
 

@@ -121,7 +121,7 @@ class RemoteFileSystemModel(IFileSystemModel):
             return
                 
         try:
-            tempFile = tempfile.mktemp()        
+            tempFile = pathlib.Path(tempfile.mktemp(suffix=path.suffix)).resolve()        
             cmd = scp.SCPClient(sshSession.get_transport())
             cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),str(path)),tempFile, recursive=True)
             system = platform.system()
@@ -130,7 +130,7 @@ class RemoteFileSystemModel(IFileSystemModel):
             elif system == 'Darwin':
                 subprocess.call(['open',tempFile])
             elif system == 'Windows':
-                subprocess.call(['start',tempFile])
+                subprocess.call(['start',tempFile],shell=True)
         except Exception as e:
             logging.error(str(e))
 
