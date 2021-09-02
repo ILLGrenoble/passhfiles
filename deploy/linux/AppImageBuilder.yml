@@ -7,7 +7,7 @@ script:
   # Make icons dirs
   - mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps/
   # Copy the icon to icons dir
-  - cp ../../src/passhfiles/icons/passhfiles_256.png AppDir/usr/share/icons/hicolor/256x256/apps/passhfiles.png
+  - cp ./icons/passhfiles_256.png AppDir/usr/share/icons/hicolor/256x256/apps/passhfiles.png
   # Make bin dirs
   - mkdir -p AppDir/usr/bin
   # Install application dependencies
