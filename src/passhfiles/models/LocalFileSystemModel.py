@@ -34,6 +34,21 @@ class LocalFileSystemModel(IFileSystemModel):
         else:
             self.setDirectory(self._currentDirectory)
 
+    def createNewFile(self, path):
+        """Create a new file.
+
+        Args:
+            path: the path to the new file
+        """
+
+        newFilePath = self._currentDirectory.joinpath(path)
+        try:
+            fout = open(str(newFilePath),'w')
+        except Exception as e:
+            logging.error(str(e))
+        else:
+            fout.close()
+
     def dropData(self, data):
         """Drop some data (directories and/or files) from a remote host to the local file system.
 

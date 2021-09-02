@@ -114,6 +114,10 @@ class FileSystemTableView(QtWidgets.QTableView):
         self._createDirectoryAction.triggered.connect(self.onCreateDirectory)
         self._menu.addAction(self._createDirectoryAction)
 
+        self._newFileAction = self._menu.addAction('New File')
+        self._newFileAction.triggered.connect(self.onCreateFile)
+        self._menu.addAction(self._newFileAction)
+
         self._renameAction = self._menu.addAction('Rename')
         self._renameConnection = None
         self._menu.addAction(self._renameAction)
@@ -148,9 +152,20 @@ class FileSystemTableView(QtWidgets.QTableView):
         if self.model() is None:
             return
 
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Create Directory Dialog', 'Enter new name:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Create Directory Dialog', 'Enter directory name:')
         if ok and text.strip():
             self.model().createDirectory(pathlib.Path(text.strip()))
+
+    def onCreateFile(self):
+        """Called when the user creates a new file.
+        """
+
+        if self.model() is None:
+            return
+
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Create New File Dialog', 'Enter filename:')
+        if ok and text.strip():
+            self.model().createNewFile(pathlib.Path(text.strip()))
 
     def onGoToFavorite(self, path):
         """Called when the user select one path among the favorites.

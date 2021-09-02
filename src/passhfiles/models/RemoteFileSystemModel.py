@@ -33,6 +33,25 @@ class RemoteFileSystemModel(IFileSystemModel):
         else:
             self.setDirectory(self._currentDirectory)
 
+    def createNewFile(self, path):
+        """Create a new file.
+
+        Args:
+            path: the path to the new file
+        """
+
+        newFilePath = self._currentDirectory.joinpath(path)
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+
+        _, _, stderr = sshSession.exec_command('{} touch {}'.format(self._serverIndex.internalPointer().name(), newFilePath))
+        error = stderr.read().decode()
+        if error:
+            logging.error(error)
+            return
+        else:
+            self.setDirectory(self._currentDirectory)
+
     def dropData(self, data):
         """Drop some data (directories and/or files) from a local file system to the remote host.
 

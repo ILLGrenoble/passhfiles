@@ -1,9 +1,9 @@
 import abc
+import logging
 import pathlib
 
 from PyQt5 import QtCore, QtGui
 
-import passhfiles
 from passhfiles.utils.Platform import iconsDirectory
 
 class MyMeta(abc.ABCMeta, type(QtCore.QAbstractTableModel)):
@@ -53,16 +53,6 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self.addToFavoritesSignal.emit(self._currentDirectory.joinpath(entry))
 
-    @abc.abstractmethod
-    def createDirectory(self, directoryName):
-        """Creates a directory.
-
-        Args:
-            directoryName (pathlib.Path): the name of the directory
-        """
-
-        pass
-
     def columnCount(self, parent=None):
         """Return the number of columns of the table.
 
@@ -82,6 +72,26 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         data = (self.server(),self.getEntries(selectedRows))
 
         self.dataCopiedSignal.emit(data)
+
+    @abc.abstractmethod
+    def createDirectory(self, directoryName):
+        """Creates a directory.
+
+        Args:
+            directoryName (pathlib.Path): the name of the directory
+        """
+
+        pass
+
+    @abc.abstractmethod
+    def createNewFile(self, path):
+        """Create a new file.
+
+        Args:
+            path: the path to the new file
+        """
+
+        pass
 
     def currentDirectory(self):
         """Returns the curren directory.
