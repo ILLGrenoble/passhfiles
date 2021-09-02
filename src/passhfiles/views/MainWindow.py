@@ -203,15 +203,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._logger.sendLog.connect(self.onDisplayLogMessage)
 
-    def onDisplayLogMessage(self, msg):
-        """Display the log message in the logger.
-
-        Args:
-            msg (str): the message
-        """
-
-        self._logger.widget().appendPlainText(msg)
-
     def loadSessions(self):
         """Load the sessions.
         """
@@ -238,6 +229,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         sessionsModel = self._sessionsTreeView.model()
         sessionsModel.clear()
+
+    def onDisplayLogMessage(self, msg):
+        """Display the log message in the logger.
+
+        Args:
+            msg (str): the message
+        """
+
+        self._logger.widget().appendPlainText(msg)
 
     def onLaunchAboutDialog(self):
         """Pops up the information dialog about the application.
