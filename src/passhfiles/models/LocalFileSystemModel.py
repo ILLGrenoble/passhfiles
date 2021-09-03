@@ -172,8 +172,8 @@ class LocalFileSystemModel(IFileSystemModel):
                 match = re.search('(.*)_\d+',base)
                 if match is not None:
                     base = match.groups(0)[0].strip()
-                target = '{} ({}){}'.format(base,num,target.suffix)
-                num += 1
+                target = target.parent.joinpath('{}_{}{}'.format(base,num,target.suffix))
+                num += 1                
 
             try:
                 if isLocal:
