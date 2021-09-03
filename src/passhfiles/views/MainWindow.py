@@ -6,6 +6,7 @@ import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from passhfiles.__pkginfo__ import __version__
 from passhfiles.dialogs.AboutDialog import AboutDialog
 from passhfiles.dialogs.KeysManagerDialog import KeysManagerDialog
 from passhfiles.models.LocalFileSystemModel import LocalFileSystemModel
@@ -196,6 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._buildMenu()
 
         self.setWindowIcon(QtGui.QIcon(str(iconsDirectory().joinpath('passhfiles.png'))))
+        self.setWindowTitle("passhfiles ({})".format(__version__))
 
         self.show()
 
