@@ -87,14 +87,11 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         elif key == QtCore.Qt.Key_C and (event.modifiers() & QtCore.Qt.ControlModifier):
             
-            selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
-
-            self.model().copyData(selectedRows)
+            self.onCopyData()
 
         elif key == QtCore.Qt.Key_V and (event.modifiers() & QtCore.Qt.ControlModifier):
 
-            mw = mainWindow(self)
-            self.model().pasteData(mw.copiedData())
+            self.onPasteData()
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
@@ -109,6 +106,8 @@ class FileSystemTableView(QtWidgets.QTableView):
         self._showHiddenFilesAction.setChecked(True)
         self._showHiddenFilesAction.triggered.connect(self.onShowHiddenFiles)
         self._menu.addAction(self._showHiddenFilesAction)
+
+        self._menu.addSeparator()
 
         self._createDirectoryAction = self._menu.addAction('Create Directory')
         self._createDirectoryAction.triggered.connect(self.onCreateDirectory)
@@ -133,6 +132,16 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         self._menu.addSeparator()
 
+        self._copyAction = self._menu.addAction('Copy')
+        self._copyAction.triggered.connect(self.onCopyData)
+        self._menu.addAction(self._copyAction)
+
+        self._pasteAction = self._menu.addAction('Paste')
+        self._pasteAction.triggered.connect(self.onPasteData)
+        self._menu.addAction(self._pasteAction)
+
+        self._menu.addSeparator()
+
         self._favoritesMenu = QtWidgets.QMenu('Favorites')
         self._menu.addMenu(self._favoritesMenu)
 
@@ -144,6 +153,14 @@ class FileSystemTableView(QtWidgets.QTableView):
             return
 
         self.model().addToFavorites(selectedRow)
+
+    def onCopyData(self):
+        """Copy data.
+        """
+
+        selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
+
+        self.model().copyData(selectedRows)
 
     def onCreateDirectory(self):
         """Called when the user creates a directory.
@@ -186,6 +203,13 @@ class FileSystemTableView(QtWidgets.QTableView):
         """
 
         self.model().onOpenEntry(selectedIndex)
+
+    def onPasteData(self):
+        """Paste data.
+        """
+
+        mw = mainWindow(self)
+        self.model().pasteData(mw.copiedData())
 
     def onReloadDirectory(self):
         """Refresh the directory.
