@@ -1,5 +1,4 @@
 import abc
-import logging
 import pathlib
 
 from PyQt5 import QtCore, QtGui

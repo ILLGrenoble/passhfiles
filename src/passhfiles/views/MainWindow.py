@@ -4,7 +4,7 @@ import platform
 import subprocess
 import sys
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 
 from passhfiles.__pkginfo__ import __version__
 from passhfiles.dialogs.AboutDialog import AboutDialog
@@ -261,12 +261,24 @@ class MainWindow(QtWidgets.QMainWindow):
             serverIndex (PyQt5.QtCore.QModelIndex): the index of the server
         """
 
+        sshSession = serverIndex.parent().internalPointer().sshSession()
+        if sshSession is None:
+            return
+
+        _, stdout, stderr = sshSession.exec_command('{} pwd'.format(serverIndex.internalPointer().name()))
+        error = stderr.read().decode()
+        if error:
+            logging.error(error)
+            return
+
+        remoteCurrentDirectory = stdout.read().decode().strip()
+
         localFileSystemModel = LocalFileSystemModel(serverIndex, homeDirectory())
         self._localFileSystem.setModel(localFileSystemModel)
         self._localFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
         self._localFileSystemLabel.setText('Local filesystem ({})'.format(localFileSystemModel.currentDirectory()))
 
-        remoteFileSystemModel = RemoteFileSystemModel(serverIndex, pathlib.PurePosixPath('/'))
+        remoteFileSystemModel = RemoteFileSystemModel(serverIndex, pathlib.PurePosixPath(remoteCurrentDirectory))
         self._remoteFileSystem.setModel(remoteFileSystemModel)
         self._remoteFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
         self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(remoteFileSystemModel.currentDirectory()))
