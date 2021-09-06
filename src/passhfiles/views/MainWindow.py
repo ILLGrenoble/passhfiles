@@ -267,12 +267,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         serverName = serverIndex.internalPointer().name()
 
+        # Fetch the result of pwd remote command for starting the remote file system at a default location
         _, stdout, stderr = sshSession.exec_command('{} pwd'.format(serverName))
         error = stderr.read().decode()
         if error:
             logging.error(error)
             return
-
         remoteCurrentDirectory = stdout.read().decode().strip()
 
         localFileSystemModel = LocalFileSystemModel(serverIndex, homeDirectory())
@@ -289,7 +289,7 @@ class MainWindow(QtWidgets.QMainWindow):
         remoteFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('remote',path))
 
         localFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._localFileSystemLabel.setText('Local filesystem ({})'.format(path)))
-        remoteFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(path)))
+        remoteFileSystemModel.currentDirectoryChangedSignal.connect(lambda path : self._remoteFileSystemLabel.setText('Remote filesystem on {} ({})'.format(serverName,path)))
 
         localFileSystemModel.dataCopiedSignal.connect(self.onSetCopiedData)
         remoteFileSystemModel.dataCopiedSignal.connect(self.onSetCopiedData)
