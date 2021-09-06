@@ -562,7 +562,15 @@ class SessionsModel(QtCore.QAbstractItemModel):
 
         while shell.recv_ready():
             out += shell.recv(2048).decode()
-        out = out.split('\n')[2:-1]
+        out = out.split('\n')
+
+        comp = 0
+        for line in out:
+            if line.startswith('Here is the list of servers you can access'):
+                break
+            comp += 1
+
+        out = out[comp+1:-1]
         servers = [l.split()[1].strip() for l in out]
 
         for server in servers:
