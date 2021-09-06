@@ -21,6 +21,8 @@ def passhfilesExcepthook(errorType, error, tback):
     for tb in tback:
         trace.append(' -- '.join([str(t) for t in tb]))
     
+    trace.append('{}: {}'.format(errorType.__name__,error))
+
     trace = '\n'.join(trace)
                 
     logging.critical(trace)
