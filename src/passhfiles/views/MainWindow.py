@@ -265,7 +265,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if sshSession is None:
             return
 
-        _, stdout, stderr = sshSession.exec_command('{} pwd'.format(serverIndex.internalPointer().name()))
+        serverName = serverIndex.internalPointer().name()
+
+        _, stdout, stderr = sshSession.exec_command('{} pwd'.format(serverName))
         error = stderr.read().decode()
         if error:
             logging.error(error)
@@ -281,7 +283,7 @@ class MainWindow(QtWidgets.QMainWindow):
         remoteFileSystemModel = RemoteFileSystemModel(serverIndex, pathlib.PurePosixPath(remoteCurrentDirectory))
         self._remoteFileSystem.setModel(remoteFileSystemModel)
         self._remoteFileSystem.horizontalHeader().setSectionResizeMode(3,QtWidgets.QHeaderView.ResizeToContents)
-        self._remoteFileSystemLabel.setText('Remote filesystem ({})'.format(remoteFileSystemModel.currentDirectory()))
+        self._remoteFileSystemLabel.setText('Remote filesystem on {} ({})'.format(serverName,remoteFileSystemModel.currentDirectory()))
 
         localFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('local',path))
         remoteFileSystemModel.addToFavoritesSignal.connect(lambda path : self.onAddToFavorites('remote',path))
