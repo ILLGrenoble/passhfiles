@@ -265,7 +265,7 @@ class LocalFileSystemModel(IFileSystemModel):
 
         self._entries = [['..',None,'Folder',None,None,self._directoryIcon]]
         for (name,isDirectory) in sortedContents:
-            absPath = self._currentDirectory.joinpath(name).resolve()
+            absPath = self._currentDirectory.joinpath(name)
             size = None if isDirectory else sizeOf(absPath.lstat().st_size)
             typ = 'Folder' if isDirectory else 'File'
             modificationTime = str(datetime.fromtimestamp(absPath.lstat().st_mtime)).split('.')[0]
