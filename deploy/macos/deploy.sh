@@ -29,7 +29,7 @@ cd ${CI_PROJECT_DIR}/deploy/macos
 PASSHFILES_DMG=PASSHFILES-${VERSION_NAME}-macOS-amd64.dmg
 hdiutil unmount /Volumes/passhfiles -force -quiet
 sleep 5
-${CI_PROJECT_DIR}/depoy/macos/create-dmg --background "${CI_PROJECT_DIR}/deploy/macos/resources/dmg/dmg_background.jpg" \
+${CI_PROJECT_DIR}/deploy/macos/create-dmg --background "${CI_PROJECT_DIR}/deploy/macos/resources/dmg/dmg_background.jpg" \
                                          --volname "passhfiles" \
 										 --window-pos 200 120 \
 										 --window-size 800 400 \
