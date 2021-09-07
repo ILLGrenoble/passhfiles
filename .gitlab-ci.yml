@@ -37,3 +37,38 @@ deploy:windows:
   tags:
     - windows
     - windows7
+
+############################
+# macos pipeline
+############################
+ci:macos:
+  stage: ci
+  script:
+    - chmod u+x ${CI_PROJECT_DIR}/deploy/macos/build.sh
+    - ${CI_PROJECT_DIR}/BuildServer/deploy/macos/build.sh
+  allow_failure: false
+  artifacts:
+    paths:
+    - "%CI_PROJECT_DIR%\\dist"
+    expire_in: 1 hrs
+  tags:
+    - macos
+
+deploy:macos:
+  stage: deploy
+  script:
+    - chmod u+x ${CI_PROJECT_DIR}/deploy/macos/deploy.sh
+    - ${CI_PROJECT_DIR}/deploy/macos/deploy.sh
+  dependencies:
+    - ci:windows
+  allow_failure: false
+  only:
+    - master
+    - develop
+    - tags
+  when: on_success
+  artifacts:
+    paths:
+     - ${CI_PROJECT_DIR}/deploy/macos/passhfiles-${CI_COMMIT_REF_NAME}-macOS-amd64.dmg"
+  tags:
+    - macos
