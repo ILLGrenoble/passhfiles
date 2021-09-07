@@ -49,7 +49,7 @@ ci:macos:
   allow_failure: false
   artifacts:
     paths:
-    - "%CI_PROJECT_DIR%\\dist"
+    - "${CI_PROJECT_DIR}/dist"
     expire_in: 1 hrs
   tags:
     - macos
