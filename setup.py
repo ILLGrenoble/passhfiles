@@ -12,6 +12,7 @@ with open('requirements.txt', 'r') as fin:
 scripts = glob.glob(os.path.join('scripts', '*'))
 
 setup(name='passhfiles',
+      app=['scripts/passhfiles'],
       version=package_info['__version__'],
       description=package_info['__description__'],
       long_description=package_info['__long_description__'],
