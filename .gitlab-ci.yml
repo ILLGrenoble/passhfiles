@@ -60,7 +60,7 @@ deploy:macos:
     - chmod u+x ${CI_PROJECT_DIR}/deploy/macos/deploy.sh
     - ${CI_PROJECT_DIR}/deploy/macos/deploy.sh
   dependencies:
-    - ci:windows
+    - ci:macos
   allow_failure: false
   only:
     - master
