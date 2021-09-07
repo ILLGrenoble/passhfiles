@@ -32,3 +32,12 @@ def checkAndGetSSHKey(keyfile,keytype,password):
         return (False, None)
     else:
         return (True,key)
+
+def runRemoteCmd(sshSession,serverNode,cmd):
+
+    _, stdout, stderr = sshSession.exec_command('{} {}'.format(serverNode.name(),cmd))
+
+    stdout = stdout.read().decode().replace(serverNode.stdoutMotd(),'').strip()
+    stderr = stderr.read().decode().replace(serverNode.stderrMotd(),'').strip()
+
+    return stdout,stderr

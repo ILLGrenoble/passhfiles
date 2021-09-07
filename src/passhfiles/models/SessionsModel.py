@@ -250,6 +250,10 @@ class ServerNode:
 
         self._parent = parent
 
+        self._stderrMotd = ''
+
+        self._stdoutMotd = ''
+
         self._favorites = {'local': [], 'remote': []}
 
     def addChild(self, child):
@@ -336,6 +340,42 @@ class ServerNode:
         """
 
         return self._parent._children.index(self)
+
+    def setStderrMotd(self,stderrMotd):
+        """Set the stderr motd for this server.
+
+        Args:
+            stderrMotd (str): the stderr motd
+        """
+
+        self._stderrMotd = stderrMotd
+
+    def setStdoutMotd(self,stdoutMotd):
+        """Set the stdout motd for this server.
+
+        Args:
+            stdoutMotd (str): the stdout motd
+        """
+
+        self._stdoutMotd = stdoutMotd
+
+    def stderrMotd(self):
+        """Returns the stderr motd for this server.
+
+        Returns:
+            str: the stderr motd
+        """
+
+        return self._stderrMotd
+
+    def stdoutMotd(self):
+        """Returns the stdout motd for this server.
+
+        Returns:
+            str: the stdout motd
+        """
+
+        return self._stdoutMotd
 
 class SessionsModel(QtCore.QAbstractItemModel):
     """Implements a model for storing the SSH sessions.

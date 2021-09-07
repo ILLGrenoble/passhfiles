@@ -81,9 +81,7 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         if key == QtCore.Qt.Key_Delete:
 
-            selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
-
-            self.model().removeEntries(selectedRows)
+            self.onDeleteFile()
 
         elif key == QtCore.Qt.Key_C and (event.modifiers() & QtCore.Qt.ControlModifier):
             
@@ -116,6 +114,10 @@ class FileSystemTableView(QtWidgets.QTableView):
         self._newFileAction = self._menu.addAction('New File')
         self._newFileAction.triggered.connect(self.onCreateFile)
         self._menu.addAction(self._newFileAction)
+
+        self._deleteAction = self._menu.addAction('Delete')
+        self._deleteAction.triggered.connect(self.onDeleteFile)
+        self._menu.addAction(self._deleteAction)
 
         self._renameAction = self._menu.addAction('Rename')
         self._renameConnection = None
@@ -171,7 +173,7 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         text, ok = QtWidgets.QInputDialog.getText(self, 'Create Directory Dialog', 'Enter directory name:')
         if ok and text.strip():
-            self.model().createDirectory(pathlib.Path(text.strip()))
+            self.model().createDirectory(text.strip())
 
     def onCreateFile(self):
         """Called when the user creates a new file.
@@ -182,7 +184,15 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         text, ok = QtWidgets.QInputDialog.getText(self, 'Create New File Dialog', 'Enter filename:')
         if ok and text.strip():
-            self.model().createNewFile(pathlib.Path(text.strip()))
+            self.model().createNewFile(text.strip())
+
+    def onDeleteFile(self):
+        """Delete the selected file.
+        """
+
+        selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
+
+        self.model().removeEntries(selectedRows)
 
     def onGoToFavorite(self, path):
         """Called when the user select one path among the favorites.

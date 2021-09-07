@@ -48,6 +48,8 @@ class LocalFileSystemModel(IFileSystemModel):
         else:
             fout.close()
 
+        self.setDirectory(self._currentDirectory)
+
     def dropData(self, data):
         """Drop some data (directories and/or files) from a remote host to the local file system.
 
@@ -260,8 +262,11 @@ class LocalFileSystemModel(IFileSystemModel):
         self._currentDirectory = directory
 
         # Sort the contents of the directory (first the sorted directories and then the sorted files)
-        sortedContents = sorted([(c,True) for c in contents if self._currentDirectory.joinpath(c).is_dir()])
-        sortedContents += sorted([(c,False) for c in contents if not self._currentDirectory.joinpath(c).is_dir()])
+        sortedDirectories = sorted([c for c in contents if self._currentDirectory.joinpath(c).is_dir()],key=str.casefold)
+        sortedDirectories = [(c,True) for c in sortedDirectories]
+        sortedFiles = sorted([c for c in contents if not self._currentDirectory.joinpath(c).is_dir()],key=str.casefold)
+        sortedFiles = [(c,False) for c in sortedFiles]
+        sortedContents = sortedDirectories + sortedFiles
 
         self._entries = [['..',None,'Folder',None,None,self._directoryIcon]]
         for (name,isDirectory) in sortedContents:

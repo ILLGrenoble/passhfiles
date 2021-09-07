@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import platform
+import re
 import subprocess
 import tempfile
 
@@ -9,6 +10,7 @@ import scp
 from passhfiles.models.IFileSystemModel import IFileSystemModel
 from passhfiles.utils.Numbers import sizeOf
 from passhfiles.utils.ProgressBar import progressBar
+from passhfiles.utils.Security import runRemoteCmd
 
 class RemoteFileSystemModel(IFileSystemModel):
     """Implements the IFileSystemModel interface in case of a remote file system.
@@ -25,8 +27,9 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
-        _, _, stderr = sshSession.exec_command('{} mkdir {}'.format(self._serverIndex.internalPointer().name(), directoryName))
-        error = stderr.read().decode()
+        serverNode = self._serverIndex.internalPointer()
+
+        _, error = runRemoteCmd(sshSession,serverNode,'mkdir {}'.format(directoryName))
         if error:
             logging.error(error)
             return
@@ -40,12 +43,13 @@ class RemoteFileSystemModel(IFileSystemModel):
             path: the path to the new file
         """
 
-        newFilePath = self._currentDirectory.joinpath(path)
+        newFilePath = self._currentDirectory.joinpath(re.escape(path))
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
-        _, _, stderr = sshSession.exec_command('{} touch {}'.format(self._serverIndex.internalPointer().name(), newFilePath))
-        error = stderr.read().decode()
+        serverNode = self._serverIndex.internalPointer()
+
+        _, error = runRemoteCmd(sshSession,serverNode,'touch {}'.format(newFilePath))
         if error:
             logging.error(error)
             return
@@ -200,10 +204,11 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
+        serverNode = self._serverIndex.internalPointer()
+
         for row in selectedRow[::-1]:
-            selectedPath = self._currentDirectory.joinpath(self._entries[row][0])
-            _, _, stderr = sshSession.exec_command('{} rm -rf {}'.format(self._serverIndex.internalPointer().name(), selectedPath))
-            error = stderr.read().decode()
+            selectedPath = self._currentDirectory.joinpath(re.escape(self._entries[row][0]))
+            _, error = runRemoteCmd(sshSession,serverNode,'rm -rf {}'.format(selectedPath))
             if error:
                 logging.error(error)
                 continue
@@ -227,18 +232,19 @@ class RemoteFileSystemModel(IFileSystemModel):
             logging.info('{} already exists'.format(newName))
             return
         
-        self._entries[selectedRow][0] = newName
-
-        oldName = self._currentDirectory.joinpath(oldName)
+        oldName = self._currentDirectory.joinpath(re.escape(oldName))
         newName = self._currentDirectory.joinpath(newName)
 
         sshSession = self._serverIndex.parent().internalPointer().sshSession()
 
-        _, _, stderr = sshSession.exec_command('{} mv {} {}'.format(self._serverIndex.internalPointer().name(), oldName,newName))
-        error = stderr.read().decode()
+        serverNode = self._serverIndex.internalPointer()
+
+        _, error = runRemoteCmd(sshSession,serverNode,'mv {} {}'.format(oldName,newName))
         if error:
             logging.error(error)
             return
+
+        self._entries[selectedRow][0] = newName
 
         self.setDirectory(self._currentDirectory)
 
@@ -257,16 +263,16 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         char = 'a' if self._showHiddenFiles else ''
 
-        _, stdout, stderr = sshSession.exec_command('{} ls --group-directories --full-time -{}lpL {}'.format(self._serverIndex.internalPointer().name(),char,self._currentDirectory))
-        error = stderr.read().decode()
+        serverNode = self._serverIndex.internalPointer()
+        output,error = runRemoteCmd(sshSession,serverNode,'ls --full-time -{}lpL {}'.format(char,self._currentDirectory))
         if error:
             logging.error(error)
             return
         
         self._entries = [['..',None,'Folder',None,None,self._directoryIcon]]
-        contents = [l.strip() for l in stdout.readlines()]
+        contents = [l.strip() for l in output.split('\n')]
 
-        # The 1st elements of contents is always the total count of entries output by the ls command. It is not used.
+        # The 1st element of contents is always the total count of entries output by the ls command. It is not used.
         # For ls -a command the 2nd and 3rd entries are for . and .. directories. It is not used.
         if self._showHiddenFiles:
             contents = contents[3:] if len(contents) >= 4 else []
@@ -284,6 +290,10 @@ class RemoteFileSystemModel(IFileSystemModel):
             modificationTime = '{} {}'.format(date,time)
             name = words[-1][:-1] if typ=='Folder' else words[-1]
             self._entries.append([name,size,typ,owner,modificationTime,icon])
+
+        sortedDirectories = sorted([v for v in self._entries if v[2]=='Folder'],key= lambda s : s[0].lower())
+        sortedFiles = sorted([v for v in self._entries if v[2]=='File'],key= lambda s : s[0].lower())
+        self._entries = sortedDirectories + sortedFiles
 
         self.layoutChanged.emit()
 

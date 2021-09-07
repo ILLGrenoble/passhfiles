@@ -8,11 +8,11 @@ from PyQt5 import QtGui, QtWidgets
 
 from passhfiles.__pkginfo__ import __version__
 from passhfiles.dialogs.AboutDialog import AboutDialog
-from passhfiles.dialogs.KeysManagerDialog import KeysManagerDialog
 from passhfiles.models.LocalFileSystemModel import LocalFileSystemModel
 from passhfiles.models.RemoteFileSystemModel import RemoteFileSystemModel
 from passhfiles.utils.Platform import homeDirectory, iconsDirectory, sessionsDatabasePath
 from passhfiles.utils.ProgressBar import progressBar
+from passhfiles.utils.Security import runRemoteCmd
 from passhfiles.views.FileSystemTableView import FileSystemTableView
 from passhfiles.views.SessionsTreeView import SessionsTreeView
 from passhfiles.widgets.LoggerWidget import LoggerWidget
@@ -56,14 +56,6 @@ class MainWindow(QtWidgets.QMainWindow):
         addSessionAction.setStatusTip('Open ssh session dialog')
         addSessionAction.triggered.connect(self._sessionsTreeView.onAddSession)
         fileMenu.addAction(addSessionAction)
-
-        fileMenu.addSeparator()
-
-        manageKeysAction = QtWidgets.QAction('&Manage Keys', self)
-        manageKeysAction.setIcon(QtGui.QIcon(str(iconsDirectory().joinpath('key.png'))))
-        manageKeysAction.setStatusTip('Open ssh session dialog')
-        manageKeysAction.triggered.connect(self.onOpenKeysManager)
-        fileMenu.addAction(manageKeysAction)
 
         fileMenu.addSeparator()
 
@@ -265,15 +257,21 @@ class MainWindow(QtWidgets.QMainWindow):
         if sshSession is None:
             return
 
-        serverName = serverIndex.internalPointer().name()
+        serverNode = serverIndex.internalPointer()
+        serverName = serverNode.name()
 
+        logging.info('Establishing connection to {}'.format(serverName))
+
+        # Fetch the result of echo -n remote command for fetching the stdout and stderr motd (if any)
+        _, stdout, stderr = sshSession.exec_command('{} echo -n'.format(serverName))
+        serverNode.setStdoutMotd(stdout.read().decode())
+        serverNode.setStderrMotd(stderr.read().decode())
+        
         # Fetch the result of pwd remote command for starting the remote file system at a default location
-        _, stdout, stderr = sshSession.exec_command('{} pwd'.format(serverName))
-        error = stderr.read().decode()
+        remoteCurrentDirectory, error = runRemoteCmd(sshSession,serverNode,'pwd')
         if error:
             logging.error(error)
             return
-        remoteCurrentDirectory = stdout.read().decode().strip()
 
         localFileSystemModel = LocalFileSystemModel(serverIndex, homeDirectory())
         self._localFileSystem.setModel(localFileSystemModel)
@@ -293,13 +291,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         localFileSystemModel.dataCopiedSignal.connect(self.onSetCopiedData)
         remoteFileSystemModel.dataCopiedSignal.connect(self.onSetCopiedData)
-
-    def onOpenKeysManager(self):
-        """Opens the key manager.
-        """
-
-        dialog = KeysManagerDialog(self)
-        dialog.exec_()
 
     def onQuitApplication(self):
         """Event called when the application is exited.
