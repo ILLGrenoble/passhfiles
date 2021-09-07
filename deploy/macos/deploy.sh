@@ -4,7 +4,7 @@
 # Create DMG
 #############################
 
-VERSION_NAME = `python -c 'exec(open("${CI_PROJECT_DIR}/src/passhfiles/__pkginfo__.py").read()) ; print(__version__)'`
+VERSION_NAME=`python -c 'exec(open("${CI_PROJECT_DIR}/src/passhfiles/__pkginfo__.py").read()) ; print(__version__)'`
 
 PASSHFILES_DMG=PASSHFILES-${VERSION_NAME}-macOS-amd64.dmg
 hdiutil unmount /Volumes/passhfiles -force -quiet
