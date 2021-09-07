@@ -45,7 +45,7 @@ ci:macos:
   stage: ci
   script:
     - chmod u+x ${CI_PROJECT_DIR}/deploy/macos/build.sh
-    - ${CI_PROJECT_DIR}/BuildServer/deploy/macos/build.sh
+    - ${CI_PROJECT_DIR}/deploy/macos/build.sh
   allow_failure: false
   artifacts:
     paths:
