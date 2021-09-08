@@ -175,7 +175,6 @@ class LocalFileSystemModel(IFileSystemModel):
                     base = match.groups(0)[0].strip()
                 target = target.parent.joinpath('{}_{}{}'.format(base,num,target.suffix))
                 num += 1                
-            print(target)
             try:
                 if isLocal:
                     if isDirectory:
