@@ -69,7 +69,7 @@ class LocalFileSystemModel(IFileSystemModel):
                         shutil.copy(d,self._currentDirectory)
                 else:
                     cmd = scp.SCPClient(sshSession.get_transport())
-                    cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),self._currentDirectory, recursive=True)
+                    cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),str(self._currentDirectory), recursive=True)
             except Exception as e:
                 logging.error(str(e))
                 pass
@@ -166,7 +166,7 @@ class LocalFileSystemModel(IFileSystemModel):
 
         progressBar.reset(len(entries))
         for i, (d,isDirectory,isLocal) in enumerate(entries):
-            target = self._currentDirectory.joinpath(d)
+            target = self._currentDirectory.joinpath(d.stem+d.suffix)
             num = 1
             while target.exists():
                 base = str(target.parent.joinpath(target.stem))
@@ -175,7 +175,7 @@ class LocalFileSystemModel(IFileSystemModel):
                     base = match.groups(0)[0].strip()
                 target = target.parent.joinpath('{}_{}{}'.format(base,num,target.suffix))
                 num += 1                
-
+            print(target)
             try:
                 if isLocal:
                     if isDirectory:
@@ -184,7 +184,7 @@ class LocalFileSystemModel(IFileSystemModel):
                         shutil.copy(d,target)
                 else:
                     cmd = scp.SCPClient(sshSession.get_transport())
-                    cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),target, recursive=True)
+                    cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(), d),str(target), recursive=True)
             except Exception as e:
                 logging.error(str(e))
                 pass
