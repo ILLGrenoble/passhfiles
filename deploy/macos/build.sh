@@ -6,6 +6,8 @@ rm -rf ./build
 
 rm -rf ./dist
 
+rm passhfiles*dmg
+
 virtualenv -p python3 ./venvs/passhfiles
 
 source ./venvs/passhfiles/bin/activate
