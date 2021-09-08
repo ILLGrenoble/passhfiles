@@ -2,9 +2,15 @@
 
 set passhfiles_dir=%cd%
 
-set version=%CI_COMMIT_REF_NAME%
+rem the directory that will contain the python + deps + passhfiles
+set target_dir=%passhfiles_dir%\ci-install
 
-echo %version% > version
+rem the path to python executable
+set python_exe=%target_dir%\python.exe
+
+for /F "tokens=*" %a in ('.\ci-install\python.exe -c "exec(open('.\src\passhfiles\__pkginfo__.py').read()) ; print(__version__)"') do set VERSION=%a
+
+echo %VERSION%> version
 
 set target_dir=%passhfiles_dir%\ci-install
 
