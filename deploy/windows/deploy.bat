@@ -4,6 +4,8 @@ set passhfiles_dir=%cd%
 
 set version=%CI_COMMIT_REF_NAME%
 
+echo %version% > version
+
 set target_dir=%passhfiles_dir%\ci-install
 
 rem copy the LICENSE and CHANGELOG files
