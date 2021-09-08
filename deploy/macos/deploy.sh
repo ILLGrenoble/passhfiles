@@ -4,11 +4,11 @@
 # Create DMG
 #############################
 
-VERSION_NAME=`python -c "exec(open('./src/passhfiles/__pkginfo__.py').read()) ; print(__version__)"`
+VERSION=`python -c "exec(open('./src/passhfiles/__pkginfo__.py').read()) ; print(__version__)"`
 
 echo ${VERSION} > version
 
-PASSHFILES_DMG=passhfiles-${VERSION_NAME}-macOS-amd64.dmg
+PASSHFILES_DMG=passhfiles-${VERSION}-macOS-amd64.dmg
 hdiutil unmount /Volumes/passhfiles -force -quiet
 sleep 5
 ./deploy/macos/create-dmg --background "./deploy/macos/resources/dmg/dmg_background.jpg" \
