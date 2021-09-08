@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ./venvs/passhfiles/bin/activate
+
 cd deploy/linux
 
 # Remove previous images
