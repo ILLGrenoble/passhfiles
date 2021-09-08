@@ -1,16 +1,14 @@
 #!/bin/bash
 
-cd ${CI_PROJECT_DIR}
+rm -rf ./venvs/passhfiles
 
-rm -rf ${CI_PROJECT_DIR}/venvs/passhfiles
+rm -rf ./build
 
-rm -rf ${CI_PROJECT_DIR}/build
+rm -rf ./dist
 
-rm -rf ${CI_PROJECT_DIR}/dist
+virtualenv -p python3 ./venvs/passhfiles
 
-virtualenv -p python3 ${CI_PROJECT_DIR}/venvs/passhfiles
-
-source ${CI_PROJECT_DIR}/venvs/passhfiles/bin/activate
+source ./venvs/passhfiles/bin/activate
 
 pip install .
 
