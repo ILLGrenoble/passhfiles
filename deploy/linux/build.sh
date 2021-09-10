@@ -1,17 +1,11 @@
 #!/bin/bash
 
-rm -rf ./venvs/passhfiles
+rm -rf ./venvs
 
-rm -rf ./build
-
-rm -rf ./dist
-
-rm passhfiles*dmg
-
-virtualenv -p python3 ./venvs/passhfiles
+virtualenv -p python3.8 ./venvs/passhfiles
 
 source ./venvs/passhfiles/bin/activate
 
-pip install .
-
 pip install appimage-builder
+
+pip install .
