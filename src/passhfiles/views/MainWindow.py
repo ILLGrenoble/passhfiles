@@ -262,10 +262,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         logging.info('Establishing connection to {}'.format(serverName))
 
-        # Fetch the result of echo -n remote command for fetching the stdout and stderr motd (if any)
+        # Fetch the result of echo -n remote command for setting the stdout and stderr motd (if any)
         _, stdout, stderr = sshSession.exec_command('{} echo -n'.format(serverName))
-        serverNode.setStdoutMotd(stdout.read().decode())
-        serverNode.setStderrMotd(stderr.read().decode())
+        output = stdout.read().decode()
+        error = stderr.read().decode()
+
+        # Case where the host is not reachable
+        if 'No route to host' in error:
+            logging.error(error)
+            return
+
+        serverNode.setStdoutMotd(output)
+        serverNode.setStderrMotd(error)
         
         # Fetch the result of pwd remote command for starting the remote file system at a default location
         remoteCurrentDirectory, error = runRemoteCmd(sshSession,serverNode,'pwd')
