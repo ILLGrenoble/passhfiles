@@ -1,3 +1,10 @@
+version 1.0.2
+--------------
+* FIXED    the application send an error in case of connexion time out
+* FIXED    bug when dropping/pasting data
+* ADDED    support for building appimage on linux
+* ADDED    local and remote files can be edited
+
 version 1.0.1
 --------------
 * ADDED    capture the stdout and stderr motd at connexion

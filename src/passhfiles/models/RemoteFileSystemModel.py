@@ -56,6 +56,34 @@ class RemoteFileSystemModel(IFileSystemModel):
         else:
             self.setDirectory(self._currentDirectory)
 
+    def createTemporaryFile(self,index):
+        """Copy the selected file to a temporary file on the local file system and returns both 
+        temporary and actual file names.
+
+        Args:
+            index (PyQt5.QtCore.QModelIndex): the index of the file
+
+        Returns:
+            2-tuple: respectively the path to the temporary and actual file names
+        """
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+
+        if sshSession is None:
+            return
+
+        row = index.row()
+
+        entry = self._entries[row]
+
+        actualFile = pathlib.PurePosixPath(self._currentDirectory.joinpath(entry[0]))
+
+        tempFile = pathlib.Path(tempfile.mktemp(suffix=actualFile.suffix))
+        cmd = scp.SCPClient(sshSession.get_transport())
+        cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),actualFile),str(tempFile), recursive=True)
+
+        return tempFile, actualFile
+
     def dropData(self, data):
         """Drop some data (directories and/or files) from a local file system to the remote host.
 
@@ -63,13 +91,23 @@ class RemoteFileSystemModel(IFileSystemModel):
             data (list): the list of data to be transfered
         """
 
-        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()        
 
         progressBar.reset(len(data))
         for i, (d,_,_) in enumerate(data):
+
+            currentSubEntries = [entry[0] for entry in self._entries]
+            base = d.stem + d.suffix
+            num = 1
+            while base in currentSubEntries:
+                base = '{}_{}{}'.format(d.stem,num,d.suffix)
+                num += 1
+
+            targetFile = self._currentDirectory.joinpath(base)
+
             try:
                 cmd = scp.SCPClient(sshSession.get_transport())
-                cmd.put(str(d), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),self._currentDirectory), recursive=True)
+                cmd.put(str(d), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),targetFile), recursive=True)
             except Exception as e:
                 logging.error(str(e))
                 pass
@@ -95,7 +133,7 @@ class RemoteFileSystemModel(IFileSystemModel):
         Returns:
             list: list of tuples where the 1st element is the full path of the entry, the 2nd element 
             is a boolean indicating whether the entry is a directory or not and the 3rd element is a 
-            boolean indicatig whether the entry is local or not 
+            boolean indicatig whether the entry is local or not
         """
 
         entries = []
@@ -144,7 +182,7 @@ class RemoteFileSystemModel(IFileSystemModel):
             return
                 
         try:
-            tempFile = pathlib.Path(tempfile.mktemp(suffix=path.suffix)).resolve()        
+            tempFile = tempfile.mktemp(suffix=path.suffix)
             cmd = scp.SCPClient(sshSession.get_transport())
             cmd.get('{}/{}'.format(self._serverIndex.internalPointer().name(),str(path)),tempFile, recursive=True)
             system = platform.system()
@@ -245,6 +283,43 @@ class RemoteFileSystemModel(IFileSystemModel):
             return
 
         self._entries[selectedRow][0] = newName
+
+        self.setDirectory(self._currentDirectory)
+
+    def saveFile(self, tempFile, actualFile):
+        """Save a file that was opened for edition.
+
+        Args:
+            tempFile (pathlib.Path): the temporary file that contains the saved data
+            actualFile (pathlib.Path): the actual path to which the file should be saved
+        """
+
+        sshSession = self._serverIndex.parent().internalPointer().sshSession()
+        if sshSession is None:
+            return
+
+        currentSubEntries = [entry[0] for entry in self._entries]
+
+        base = actualFile.stem + actualFile.suffix
+    
+        num = 1
+        while base in currentSubEntries:
+            base = '{}_{}{}'.format(actualFile.stem,num,actualFile.suffix)
+            num += 1
+
+        serverNode = self._serverIndex.internalPointer()
+
+        backupFile = self._currentDirectory.joinpath(base)
+        _, error = runRemoteCmd(sshSession,serverNode,'mv {} {}'.format(actualFile,backupFile))
+        if error:
+            logging.error(error)
+            return
+
+        try:
+            cmd = scp.SCPClient(sshSession.get_transport())
+            cmd.put(str(tempFile), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),actualFile), recursive=True)
+        except Exception as e:
+            logging.error(str(e))
 
         self.setDirectory(self._currentDirectory)
 

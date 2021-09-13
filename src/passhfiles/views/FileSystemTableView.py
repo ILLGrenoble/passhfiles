@@ -1,10 +1,12 @@
-from genericpath import isdir
+import logging
 import pathlib
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from passhfiles.dialogs.FileEditorDialog import FileEditorDialog
 from passhfiles.models.IFileSystemModel import IFileSystemModel
 from passhfiles.utils.Gui import mainWindow
+from passhfiles.utils.String import isBinaryString
 
 class FileSystemTableView(QtWidgets.QTableView):
     """Implements a view to the file system (local or remote). The view is implemented as a table view with four 
@@ -93,62 +95,11 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         return super(FileSystemTableView,self).keyPressEvent(event)
 
-    def initContextualMenu(self, selectedIndex):
-        """Initializes the context menu.
-        """
-
-        self._menu = QtWidgets.QMenu()
-
-        self._showHiddenFilesAction = self._menu.addAction('Show hidden files')
-        self._showHiddenFilesAction.setCheckable(True)
-        self._showHiddenFilesAction.setChecked(True)
-        self._showHiddenFilesAction.triggered.connect(self.onShowHiddenFiles)
-        self._menu.addAction(self._showHiddenFilesAction)
-
-        self._menu.addSeparator()
-
-        self._createDirectoryAction = self._menu.addAction('Create Directory')
-        self._createDirectoryAction.triggered.connect(self.onCreateDirectory)
-        self._menu.addAction(self._createDirectoryAction)
-
-        self._newFileAction = self._menu.addAction('New File')
-        self._newFileAction.triggered.connect(self.onCreateFile)
-        self._menu.addAction(self._newFileAction)
-
-        self._deleteAction = self._menu.addAction('Delete')
-        self._deleteAction.triggered.connect(self.onDeleteFile)
-        self._menu.addAction(self._deleteAction)
-
-        self._renameAction = self._menu.addAction('Rename')
-        self._renameConnection = None
-        self._menu.addAction(self._renameAction)
-
-        self._openAction = self._menu.addAction('Open')
-        self._openConnection = None
-        self._menu.addAction(self._openAction)
-
-        self._reloadAction = self._menu.addAction('Reload')
-        self._reloadAction.triggered.connect(self.onReloadDirectory)
-        self._reloadConnection = None
-        self._menu.addAction(self._openAction)
-
-        self._menu.addSeparator()
-
-        self._copyAction = self._menu.addAction('Copy')
-        self._copyAction.triggered.connect(self.onCopyData)
-        self._menu.addAction(self._copyAction)
-
-        self._pasteAction = self._menu.addAction('Paste')
-        self._pasteAction.triggered.connect(self.onPasteData)
-        self._menu.addAction(self._pasteAction)
-
-        self._menu.addSeparator()
-
-        self._favoritesMenu = QtWidgets.QMenu('Favorites')
-        self._menu.addMenu(self._favoritesMenu)
-
     def onAddToFavorites(self, selectedRow):
-        """Called when the user add a path to the favorites.
+        """Called when the user adds a path to the favorites.
+
+        Args:
+            selectedRow (int): the row of the selected directory
         """
 
         if self.model() is None:
@@ -193,6 +144,25 @@ class FileSystemTableView(QtWidgets.QTableView):
         selectedRows = [index.row() for index in self.selectionModel().selectedRows()]
 
         self.model().removeEntries(selectedRows)
+
+    def onEditFile(self, index):
+        """Edit a given file.
+
+        Args:
+            index (PyQt5.QtCore.QModelIndex): the index of the selected file
+        """
+
+        tempFile, actualFile = self.model().createTemporaryFile(index)
+
+        if isBinaryString(open(str(tempFile),'rb').read(1024)):
+            logging.error('The file is a binary. Can not edit')
+            return
+
+        dialog = FileEditorDialog(tempFile, actualFile)
+
+        dialog.fileSaved.connect(self.onSaveFile)
+
+        dialog.exec_()
 
     def onGoToFavorite(self, path):
         """Called when the user select one path among the favorites.
@@ -242,6 +212,16 @@ class FileSystemTableView(QtWidgets.QTableView):
         if ok and text.strip():
             self.model().renameEntry(selectedRow, text.strip())
 
+    def onSaveFile(self, tempFile, actualFile):
+        """Save a file that was opened for edition.
+
+        Args:
+            tempFile (pathlib.Path): the temporary file that contains the saved data
+            actualFile (pathlib.PurePath): the actual path to which the file should be saved
+        """
+
+        self.model().saveFile(tempFile, actualFile)
+
     def onShowContextualMenu(self, point):
         """Pops up a contextual menu when the user right-clicks on the file system.
 
@@ -254,38 +234,69 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         selectedIndex = self.indexAt(point)
         selectedRow = selectedIndex.row()
+        if selectedRow == -1:
+            return
 
-        if self._menu is None:
-            self.initContextualMenu(selectedIndex)
+        entryIsADirectory =  self.model().isDirectory(selectedRow)
 
-        if self._renameConnection is not None:
-            self._renameAction.disconnect(self._renameConnection)
-        self._renameConnection = self._renameAction.triggered.connect(lambda item, row=selectedRow: self.onRenameEntry(row))
+        menu = QtWidgets.QMenu()
 
-        if self._openConnection is not None:
-            self._openAction.disconnect(self._openConnection)
-        self._openConnection = self._openAction.triggered.connect(lambda item, index=selectedIndex : self.onOpenEntry(index))
+        showHiddenFilesAction = menu.addAction('Show hidden files')
+        showHiddenFilesAction.setCheckable(True)
+        showHiddenFilesAction.setChecked(True)
+        showHiddenFilesAction.triggered.connect(self.onShowHiddenFiles)
 
-        self._menu.removeAction(self._favoritesMenu.menuAction())
-        self._favoritesMenu = QtWidgets.QMenu('Favorites')
+        menu.addSeparator()
 
-        try:
-            if self.model().isDirectory(selectedRow):
-                self._addToFavoritesAction = self._favoritesMenu.addAction('Add to favorites')
-                self._addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
-        except IndexError:
-            pass
+        createDirectoryAction = menu.addAction('Create Directory')
+        createDirectoryAction.triggered.connect(self.onCreateDirectory)
 
-        self._gotoFavoritesMenu = QtWidgets.QMenu('Go to')
+        newFileAction = menu.addAction('New File')
+        newFileAction.triggered.connect(self.onCreateFile)
+
+        deleteAction = menu.addAction('Delete')
+        deleteAction.triggered.connect(self.onDeleteFile)
+
+        renameAction = menu.addAction('Rename')
+        renameAction.triggered.connect(lambda item, row=selectedRow: self.onRenameEntry(row))
+
+        openAction = menu.addAction('Open')
+        openAction.triggered.connect(lambda item, index=selectedIndex : self.onOpenEntry(index))
+
+        if not entryIsADirectory:
+            editAction = menu.addAction('Edit')
+            editAction.triggered.connect(lambda item, index=selectedIndex : self.onEditFile(index))
+
+        reloadAction = menu.addAction('Reload')
+        reloadAction.triggered.connect(self.onReloadDirectory)
+
+        menu.addSeparator()
+
+        copyAction = menu.addAction('Copy')
+        copyAction.triggered.connect(self.onCopyData)
+
+        pasteAction = menu.addAction('Paste')
+        pasteAction.triggered.connect(self.onPasteData)
+
+        menu.addSeparator()
+
+        favoritesMenu = QtWidgets.QMenu('Favorites')
+
+        favoritesMenu = QtWidgets.QMenu('Favorites')
+
+        if entryIsADirectory:
+            addToFavoritesAction = favoritesMenu.addAction('Add to favorites')
+            addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
+
+        gotoFavoritesMenu = QtWidgets.QMenu('Go to')
         favorites = self.model().favorites()
         for fav in favorites:
-            favAction = self._gotoFavoritesMenu.addAction(str(fav))
+            favAction = gotoFavoritesMenu.addAction(str(fav))
             favAction.triggered.connect(lambda item, f=fav : self.onGoToFavorite(f))
+        favoritesMenu.addMenu(gotoFavoritesMenu)
+        menu.addMenu(favoritesMenu)
 
-        self._favoritesMenu.addMenu(self._gotoFavoritesMenu)
-        self._menu.addMenu(self._favoritesMenu)
-
-        self._menu.exec_(QtGui.QCursor.pos())
+        menu.exec_(QtGui.QCursor.pos())
 
     def onShowHiddenFiles(self, show):
         """Show/hide hidden files.

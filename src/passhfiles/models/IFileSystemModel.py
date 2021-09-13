@@ -92,6 +92,20 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         pass
 
+    @abc.abstractmethod
+    def createTemporaryFile(self,index):
+        """Copy the selected file to a temporary file on the local file system and returns both 
+        temporary and actual file names.
+
+        Args:
+            index (PyQt5.QtCore.QModelIndex): the index of the file
+
+        Returns:
+            2-tuple: respectively the path to the temporary and actual file names
+        """
+
+        pass
+
     def currentDirectory(self):
         """Returns the curren directory.
 
@@ -153,7 +167,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
 
         return QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
-
+    
     @abc.abstractmethod
     def getEntries(self,indexes):
         """Returns the entries for a set of rows.
@@ -190,7 +204,7 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
 
         if row < 0 or row >= len(self._entries):
-            raise IndexError('Invalid row number')
+            return False
 
         entry = self._entries[row]
 
@@ -266,6 +280,18 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
         
         return len(self._entries)
+
+    @abc.abstractmethod
+    def saveFile(tempFile,actualFile):
+        """Save a file that was opened for edition.
+
+        Args:
+            tempFile (pathlib.Path): the temporary file that contains the saved data
+            actualFile (pathlib.PurePath): the actual path to which the file should be saved
+        """
+
+        pass
+
 
     def serverIndex(self):
         """Returns the index of the server item.

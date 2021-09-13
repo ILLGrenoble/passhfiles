@@ -1,11 +1,12 @@
 import collections
 import logging
 import platform
-import paramiko
 import pathlib
 import subprocess
 import tempfile
 import time
+
+import paramiko
 
 import yaml
 

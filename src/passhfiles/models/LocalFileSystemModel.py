@@ -1,9 +1,12 @@
 from datetime import datetime
 import logging
+import os
+import pathlib
 import platform
 import re
 import shutil
 import subprocess
+import tempfile
 
 import scp
 
@@ -49,6 +52,29 @@ class LocalFileSystemModel(IFileSystemModel):
             fout.close()
 
         self.setDirectory(self._currentDirectory)
+
+    def createTemporaryFile(self,index):
+        """Copy the selected file to a temporary file on the local file system and returns both 
+        temporary and actual file names.
+
+        Args:
+            index (PyQt5.QtCore.QModelIndex): the index of the file
+
+        Returns:
+            2-tuple: respectively the path to the temporary and actual file names
+        """
+
+        row = index.row()
+
+        entry = self._entries[row]
+
+        actualFile = pathlib.PurePath(self._currentDirectory.joinpath(entry[0]))
+
+        tempFile = pathlib.Path(tempfile.mktemp(suffix=actualFile.suffix))
+
+        shutil.copy(str(actualFile),str(tempFile))
+
+        return tempFile, actualFile
 
     def dropData(self, data):
         """Drop some data (directories and/or files) from a remote host to the local file system.
@@ -232,6 +258,29 @@ class LocalFileSystemModel(IFileSystemModel):
         shutil.move(str(oldName),str(newName))
 
         self.layoutChanged.emit()
+
+    def saveFile(self, tempFile, actualFile):
+        """Save a file that was opened for edition.
+
+        Args:
+            tempFile (pathlib.Path): the temporary file that contains the saved data
+            actualFile (pathlib.Path): the actual path to which the file should be saved
+        """
+
+        savedFile = actualFile
+        num = 1
+        while os.path.exists(str(savedFile)):
+            base = str(savedFile.parent.joinpath(savedFile.stem))
+            match = re.search('(.*)_\d+',base)
+            if match is not None:
+                base = match.groups(0)[0].strip()
+            savedFile = savedFile.parent.joinpath('{}_{}{}'.format(base,num,savedFile.suffix))
+            num += 1
+
+        shutil.copy(str(actualFile),str(savedFile))
+        shutil.move(str(tempFile),str(actualFile))
+
+        self.setDirectory(self._currentDirectory)
 
     def setDirectory(self, directory):
         """Sets a directory.
