@@ -1,0 +1,160 @@
+name: CI
+
+on:
+
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  create-release:
+
+    runs-on: Linux
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to github
+        run: ./deploy/linux/login.sh
+        env:
+          ILL_GITHUB_TOKEN: ${{ secrets.ILL_GITHUB_TOKEN }}
+
+      - name: Create release
+        run: ./deploy/linux/create-release.sh
+        env:
+          ILL_GITHUB_TOKEN: ${{ secrets.ILL_GITHUB_TOKEN }}
+
+  build-macos:
+
+    runs-on: macOS
+
+    needs: create-release
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build the application
+        run: ./deploy/macos/build.sh 
+
+      - name: Cache the build output
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          key: dist
+          path: ./dist
+
+  deploy-macos:
+
+    runs-on: macOS
+
+    needs: build-macos
+
+    steps:
+
+      - name: Deploy the application
+        run: ./deploy/macos/deploy.sh
+
+      - name: Upload deploy artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: passhfiles-macos
+          path: ./passhfiles*dmg
+          if-no-files-found: error
+
+      - name: Upload release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        run: ./deploy/macos/upload-release-assets.sh
+        env:
+          ILL_GITHUB_TOKEN: ${{ secrets.ILL_GITHUB_TOKEN }}
+
+  build-linux:
+
+    runs-on: Linux
+
+    needs: create-release
+
+    steps:
+
+      - name: Build the application
+        run: ./deploy/linux/build.sh 
+
+      - name: Cache the build output
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          key: .env
+          path: .env
+
+  deploy-linux:
+
+    runs-on: Linux
+
+    needs: build-linux
+
+    steps:
+
+      - name: Deploy the application
+        run: ./deploy/linux/deploy.sh
+
+      - name: Upload deploy artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: passhfiles-linux
+          path: ./passhfiles*AppImage
+          if-no-files-found: error
+
+      - name: Upload release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        run: ./deploy/linux/upload-release-assets.sh
+        env:
+          ILL_GITHUB_TOKEN: ${{ secrets.ILL_GITHUB_TOKEN }}
+
+  build-windows:
+
+    runs-on: windows
+
+    needs: create-release
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build the application
+        run: powershell .\deploy\windows\build.ps1
+
+  deploy-windows:
+
+    runs-on: windows
+
+    needs: build-windows
+
+    steps:
+
+      - name: Build the installer
+        run: powershell .\deploy\windows\deploy.ps1
+
+      - name: Upload deploy artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: passhfiles-windows
+          path: ./passhfiles*exe
+          if-no-files-found: error
+
+      - name: Upload release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        run: .\deploy\windows\upload-release-assets.ps1
+        env:
+          ILL_GITHUB_TOKEN: ${{ secrets.ILL_GITHUB_TOKEN }}

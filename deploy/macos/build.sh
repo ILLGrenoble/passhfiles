@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm -rf ./venvs/passhfiles
+rm -rf ./.env
 
 rm -rf ./build
 
@@ -8,9 +8,9 @@ rm -rf ./dist
 
 rm passhfiles*dmg
 
-virtualenv -p python3 ./venvs/passhfiles
+virtualenv -p python3 ./.env
 
-source ./venvs/passhfiles/bin/activate
+source ./.env/bin/activate
 
 pip install .
 

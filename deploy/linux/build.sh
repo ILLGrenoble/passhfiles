@@ -1,10 +1,10 @@
 #!/bin/bash
 
-rm -rf ./venvs
+rm -rf .env
 
-virtualenv -p python3.8 ./venvs/passhfiles
+virtualenv -p python3.8 .env
 
-source ./venvs/passhfiles/bin/activate
+source .env/bin/activate
 
 pip install appimage-builder
 
