@@ -7,6 +7,7 @@ import passhfiles
 if platform.system() == 'Windows':
     import ctypes as ctypes
     from ctypes import wintypes as wintypes
+    from ctypes import windll
 
     kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
     advapi32 = ctypes.WinDLL('advapi32', use_last_error=True)
@@ -138,6 +139,18 @@ if platform.system() == 'Windows':
     def homeDirectory():
         return pathlib.Path(os.environ['USERPROFILE'])
 
+    def getDrives():
+        import string
+        drives = []
+        bitmask = windll.kernel32.GetLogicalDrives()
+        for letter in string.ascii_uppercase:
+            if bitmask & 1:
+                drives.append(letter)
+            bitmask >>= 1
+
+        drives = [d + ':\\'  for d in drives]
+                  
+        return drives
 else:
 
     def findOwner(filename):

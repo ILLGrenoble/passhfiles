@@ -147,7 +147,14 @@ class LocalFileSystemModel(IFileSystemModel):
 
         entry = self._entries[row]
 
-        fullPath = self._currentDirectory.joinpath(entry[0]).resolve()
+        # Any error must be caught here when resolving the file
+        try:
+            fullPath = self._currentDirectory.joinpath(entry[0]).resolve()
+        except Exception as e:
+            self._currentDirectory = pathlib.Path()
+            logging.error(str(e))
+            return
+        
         if entry[2] == 'Folder':
             self.setDirectory(fullPath)
         else:
@@ -297,6 +304,25 @@ class LocalFileSystemModel(IFileSystemModel):
         # If the input argument was a filename, get its base directory
         if directory.is_file():
             directory = directory.parent
+
+        if platform.system() == 'Windows' and self._currentDirectory == directory:
+            from passhfiles.utils.Platform import getDrives
+            availableDrives = getDrives()
+
+            self._entries = []
+            for drive in availableDrives:
+                size = None
+                typ = 'Folder'
+                modificationTime = ''
+                icon = self._directoryIcon
+                owner = findOwner(drive)
+                self._entries.append([drive,size,typ,owner,modificationTime,icon])
+
+            self._currentDirectory = directory
+
+            self.layoutChanged.emit()
+            self.currentDirectoryChangedSignal.emit(self._currentDirectory)
+            return
 
         try:
             contents = [v.name for v in directory.iterdir()]

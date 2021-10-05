@@ -39,6 +39,8 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         self._showHiddenFiles = True
 
+        self._currentDirectory = None
+
         self.setDirectory(startingDirectory)
 
     def addToFavorites(self, selectedRow):

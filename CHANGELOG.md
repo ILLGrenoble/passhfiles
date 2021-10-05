@@ -1,3 +1,7 @@
+version 1.0.3
+--------------
+* UPDATED  all the drives can be browsed on Windows
+
 version 1.0.2
 --------------
 * FIXED    the application send an error in case of connexion time out
