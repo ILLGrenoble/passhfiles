@@ -1,3 +1,7 @@
+version 1.0.4
+--------------
+* FIXED    bug when the user reaches on Windows the root of a given drive
+
 version 1.0.3
 --------------
 * UPDATED  all the drives can be browsed on Windows

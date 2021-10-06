@@ -305,6 +305,8 @@ class LocalFileSystemModel(IFileSystemModel):
         if directory.is_file():
             directory = directory.parent
 
+        # Case where on Windows the directory is the root of a given drive.
+        # Display all the drives available on the machine
         if platform.system() == 'Windows' and self._currentDirectory == directory:
             from passhfiles.utils.Platform import getDrives
             availableDrives = getDrives()
@@ -318,7 +320,7 @@ class LocalFileSystemModel(IFileSystemModel):
                 owner = findOwner(drive)
                 self._entries.append([drive,size,typ,owner,modificationTime,icon])
 
-            self._currentDirectory = directory
+            self._currentDirectory = pathlib.Path()
 
             self.layoutChanged.emit()
             self.currentDirectoryChangedSignal.emit(self._currentDirectory)
