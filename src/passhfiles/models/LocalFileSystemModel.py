@@ -156,7 +156,7 @@ class LocalFileSystemModel(IFileSystemModel):
             return
         
         if entry[2] == 'Folder':
-            self.setDirectory(fullPath)
+            self.setDirectory(fullPath,True)
         else:
             self.openFile(fullPath)
 
@@ -289,13 +289,14 @@ class LocalFileSystemModel(IFileSystemModel):
 
         self.setDirectory(self._currentDirectory)
 
-    def setDirectory(self, directory):
+    def setDirectory(self, directory), changeDirectory=False:
         """Sets a directory.
 
         This will trigger a full update of the model.
 
         Args:
             directory (str): the directory
+            changeDirectory (bool): True if case of change of directory
         """
 
         if not directory.is_absolute():
@@ -307,7 +308,7 @@ class LocalFileSystemModel(IFileSystemModel):
 
         # Case where on Windows the directory is the root of a given drive.
         # Display all the drives available on the machine
-        if platform.system() == 'Windows' and self._currentDirectory == directory:
+        if platform.system() == 'Windows' and changeDirectory and self._currentDirectory == directory:
             from passhfiles.utils.Platform import getDrives
             availableDrives = getDrives()
 

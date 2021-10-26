@@ -305,13 +305,14 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         return self._serverIndex
 
     @abc.abstractmethod
-    def setDirectory(self, directory):
+    def setDirectory(self, directory, changeDirectory=False):
         """Sets a directory.
 
         This will trigger a full update of the model.
 
         Args:
             directory (str): the directory
+            changeDirectory (bool): True if case of change of directory
         """
 
         pass

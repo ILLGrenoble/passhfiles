@@ -434,7 +434,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
         """
 
         sessionNode = SessionNode(data, self._root)
-        for server in data.get('servers',[]):
+        for server in sorted(data.get('servers',[])):
             serverNode = ServerNode(server,sessionNode)
             for fsType, files in data['servers'][server].items():
                 for f in files:
@@ -612,7 +612,7 @@ class SessionsModel(QtCore.QAbstractItemModel):
             comp += 1
 
         out = out[comp+1:-1]
-        servers = [l.split()[1].strip() for l in out]
+        servers = sorted([l.split()[1].strip() for l in out])
 
         for server in servers:
             sessionNode.addChild(ServerNode(server,sessionNode))

@@ -165,7 +165,7 @@ class RemoteFileSystemModel(IFileSystemModel):
             fullPath = self._currentDirectory.joinpath(entry[0])
 
         if entry[2] == 'Folder':
-            self.setDirectory(fullPath)
+            self.setDirectory(fullPath),True
         else:
             self.openFile(fullPath)
 
@@ -323,13 +323,14 @@ class RemoteFileSystemModel(IFileSystemModel):
 
         self.setDirectory(self._currentDirectory)
 
-    def setDirectory(self, directory):
+    def setDirectory(self, directory, changeDirectory=False):
         """Sets a directory.
 
         This will trigger a full update of the model.
 
         Args:
             directory (str): the directory
+            changeDirectory (bool): True if case of change of directory
         """
 
         self._currentDirectory = directory
