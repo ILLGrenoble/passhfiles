@@ -85,6 +85,10 @@ class FileSystemTableView(QtWidgets.QTableView):
 
             self.onDeleteFile()
 
+        elif key == QtCore.Qt.Key_F5:
+            
+            self.onRefreshContents()
+
         elif key == QtCore.Qt.Key_C and (event.modifiers() & QtCore.Qt.ControlModifier):
             
             self.onCopyData()
@@ -190,6 +194,12 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         mw = mainWindow(self)
         self.model().pasteData(mw.copiedData())
+
+    def onRefreshContents(self):
+        """Refresh the files and directories of a given model.
+        """
+
+        self.model().refreshContents()
 
     def onReloadDirectory(self):
         """Refresh the directory.

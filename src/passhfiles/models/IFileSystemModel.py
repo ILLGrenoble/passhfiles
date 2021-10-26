@@ -244,6 +244,12 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
 
         pass
 
+    def refreshContents(self):
+        """Refresh the files and directory of the filesystem model.
+        """
+
+        self.setDirectory(self._currentDirectory,False)
+
     def reloadDirectory(self):
         """Reload the directory.
         """
@@ -293,7 +299,6 @@ class IFileSystemModel(QtCore.QAbstractTableModel, metaclass=MyMeta):
         """
 
         pass
-
 
     def serverIndex(self):
         """Returns the index of the server item.
