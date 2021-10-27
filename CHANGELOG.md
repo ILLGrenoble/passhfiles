@@ -1,3 +1,11 @@
+version 1.0.5
+--------------
+* FIXED    bug when showing/hiding hidden file
+* FIXED    bug when copying or drag/dropping a file to localhost on windows
+* CHANGED  right-clicking on the unoccupied area of the file views shows now the contextual menu
+* CHANGED  the servers are now listed in alphabetical order
+* ADDED    added the F5 functionnality to the local and remote file systems
+
 version 1.0.4
 --------------
 * FIXED    bug when the user reaches on Windows the root of a given drive
