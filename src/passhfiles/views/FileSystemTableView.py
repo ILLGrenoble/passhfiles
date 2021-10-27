@@ -33,6 +33,8 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         self._menu = None
 
+        self._showHiddenFiles = True
+
     def dragEnterEvent(self, event):
         event.accept()
 
@@ -98,6 +100,21 @@ class FileSystemTableView(QtWidgets.QTableView):
             self.onPasteData()
 
         return super(FileSystemTableView,self).keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        """Event triggered when user clicks on a mouse button.
+
+        Args:
+            PyQt5.QtGui.QKeyEvent: the key press event
+        """
+
+        if self.model() is None:
+            return
+
+        if event.button() == QtCore.Qt.RightButton and self.rowAt(event.pos().y()) == -1:
+            self.onShowContextualMenu(event.pos())
+
+        return super(FileSystemTableView, self).mousePressEvent(event)
 
     def onAddToFavorites(self, selectedRow):
         """Called when the user adds a path to the favorites.
@@ -244,17 +261,18 @@ class FileSystemTableView(QtWidgets.QTableView):
 
         selectedIndex = self.indexAt(point)
         selectedRow = selectedIndex.row()
-        if selectedRow == -1:
-            return
-
-        entryIsADirectory =  self.model().isDirectory(selectedRow)
 
         menu = QtWidgets.QMenu()
 
         showHiddenFilesAction = menu.addAction('Show hidden files')
         showHiddenFilesAction.setCheckable(True)
-        showHiddenFilesAction.setChecked(True)
+        showHiddenFilesAction.setChecked(self._showHiddenFiles)
         showHiddenFilesAction.triggered.connect(self.onShowHiddenFiles)
+
+        menu.addSeparator()
+
+        reloadAction = menu.addAction('Reload')
+        reloadAction.triggered.connect(self.onReloadDirectory)
 
         menu.addSeparator()
 
@@ -264,47 +282,46 @@ class FileSystemTableView(QtWidgets.QTableView):
         newFileAction = menu.addAction('New File')
         newFileAction.triggered.connect(self.onCreateFile)
 
-        deleteAction = menu.addAction('Delete')
-        deleteAction.triggered.connect(self.onDeleteFile)
+        if selectedRow >= 0:
 
-        renameAction = menu.addAction('Rename')
-        renameAction.triggered.connect(lambda item, row=selectedRow: self.onRenameEntry(row))
+            entryIsADirectory =  self.model().isDirectory(selectedRow)
 
-        openAction = menu.addAction('Open')
-        openAction.triggered.connect(lambda item, index=selectedIndex : self.onOpenEntry(index))
+            deleteAction = menu.addAction('Delete')
+            deleteAction.triggered.connect(self.onDeleteFile)
 
-        if not entryIsADirectory:
-            editAction = menu.addAction('Edit')
-            editAction.triggered.connect(lambda item, index=selectedIndex : self.onEditFile(index))
+            renameAction = menu.addAction('Rename')
+            renameAction.triggered.connect(lambda item, row=selectedRow: self.onRenameEntry(row))
 
-        reloadAction = menu.addAction('Reload')
-        reloadAction.triggered.connect(self.onReloadDirectory)
+            openAction = menu.addAction('Open')
+            openAction.triggered.connect(lambda item, index=selectedIndex : self.onOpenEntry(index))
 
-        menu.addSeparator()
+            if not entryIsADirectory:
+                editAction = menu.addAction('Edit')
+                editAction.triggered.connect(lambda item, index=selectedIndex : self.onEditFile(index))
 
-        copyAction = menu.addAction('Copy')
-        copyAction.triggered.connect(self.onCopyData)
+            menu.addSeparator()
 
-        pasteAction = menu.addAction('Paste')
-        pasteAction.triggered.connect(self.onPasteData)
+            copyAction = menu.addAction('Copy')
+            copyAction.triggered.connect(self.onCopyData)
 
-        menu.addSeparator()
+            pasteAction = menu.addAction('Paste')
+            pasteAction.triggered.connect(self.onPasteData)
 
-        favoritesMenu = QtWidgets.QMenu('Favorites')
+            menu.addSeparator()
 
-        favoritesMenu = QtWidgets.QMenu('Favorites')
+            favoritesMenu = QtWidgets.QMenu('Favorites')
 
-        if entryIsADirectory:
-            addToFavoritesAction = favoritesMenu.addAction('Add to favorites')
-            addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
+            if entryIsADirectory:
+                addToFavoritesAction = favoritesMenu.addAction('Add to favorites')
+                addToFavoritesAction.triggered.connect(lambda item, row=selectedRow : self.onAddToFavorites(row))
 
-        gotoFavoritesMenu = QtWidgets.QMenu('Go to')
-        favorites = self.model().favorites()
-        for fav in favorites:
-            favAction = gotoFavoritesMenu.addAction(str(fav))
-            favAction.triggered.connect(lambda item, f=fav : self.onGoToFavorite(f))
-        favoritesMenu.addMenu(gotoFavoritesMenu)
-        menu.addMenu(favoritesMenu)
+            gotoFavoritesMenu = QtWidgets.QMenu('Go to')
+            favorites = self.model().favorites()
+            for fav in favorites:
+                favAction = gotoFavoritesMenu.addAction(str(fav))
+                favAction.triggered.connect(lambda item, f=fav : self.onGoToFavorite(f))
+            favoritesMenu.addMenu(gotoFavoritesMenu)
+            menu.addMenu(favoritesMenu)
 
         menu.exec_(QtGui.QCursor.pos())
 
@@ -316,6 +333,7 @@ class FileSystemTableView(QtWidgets.QTableView):
         """
 
         self.model().showHiddenFiles(show)
+        self._showHiddenFiles = show
 
     def setModel(self, model):
         """Set the model.
