@@ -111,7 +111,7 @@ class FileSystemTableView(QtWidgets.QTableView):
         if self.model() is None:
             return
 
-        if event.button() == QtCore.Qt.RightButton and self.rowAt(event.pos().y()) == -1:
+        if event.button() == QtCore.Qt.RightButton and not self.indexAt(event.pos()).isValid() == -1:
             self.onShowContextualMenu(event.pos())
 
         return super(FileSystemTableView, self).mousePressEvent(event)
