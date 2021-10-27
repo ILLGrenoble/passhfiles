@@ -105,7 +105,7 @@ class FileSystemTableView(QtWidgets.QTableView):
         """Event triggered when user clicks on a mouse button.
 
         Args:
-            PyQt5.QtGui.QKeyEvent: the key press event
+            PyQt5.QtGui.QMouseEvent: the mouse click event
         """
 
         if self.model() is None:
