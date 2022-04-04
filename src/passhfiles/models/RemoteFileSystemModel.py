@@ -104,7 +104,6 @@ class RemoteFileSystemModel(IFileSystemModel):
                 num += 1
 
             targetFile = self._currentDirectory.joinpath(base)
-
             try:
                 cmd = scp.SCPClient(sshSession.get_transport())
                 cmd.put(str(d), remote_path='{}/{}'.format(self._serverIndex.internalPointer().name(),targetFile), recursive=True)
@@ -355,10 +354,13 @@ class RemoteFileSystemModel(IFileSystemModel):
         else:
             contents = contents[1:] if len(contents) >= 2 else []
 
-        for c in contents:
-            words = [v.strip() for v in c.split()]
+        for c in contents:            
+            words = [v.strip() for v in c.split()]            
             typ = 'Folder' if words[-1].endswith('/') else 'File'
-            size = sizeOf(int(words[4])) if typ == 'File' else None
+            try:
+                size = sizeOf(int(words[4])) if typ == 'File' else None
+            except ValueError:
+                size = None
             icon = self._directoryIcon if typ=='Folder' else self._fileIcon
             owner = words[2]
             date = words[5]
